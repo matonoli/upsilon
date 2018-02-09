@@ -14,26 +14,13 @@ class StMuDebug;
 class StMtdMatchMaker;
 class StMtdHitMaker;
 
-void jpsi_Maker(Int_t nevents=1, 
+void ups_Maker(Int_t nevents=1, 
 		const Char_t *fileList, 
 		const Char_t *qaflag, 
 		const Char_t *outroot="test.root", 
 		const Char_t *outtree="tree.root",
 		Bool_t debug = 0,
-		Bool_t runVpdCaliMaker = 0, 
-	        Bool_t runHitMaker = 0,
-		Bool_t runMatchMaker = 0,
-		Bool_t runMtdCaliMaker = 0,
-		Bool_t runQAMaker = 0,
-		Bool_t runJpsiMaker = 1,
-		Bool_t runEventMixing = 0,
-		Bool_t runEmbedding = 0,
-		Bool_t runTrigger = 0,
-		Bool_t runRunQA = 0,
-		Bool_t runPicoCalib = 0,
-		Bool_t runSys = 0,
-		Bool_t runEmulateHLT = 0,
-		Bool_t runMtdStudy = 0)
+		Bool_t runEmbedding = 0)
 {
   load();
   StChain *chain = new StChain; 
@@ -75,45 +62,25 @@ void jpsi_Maker(Int_t nevents=1,
   // parse to extract run/year
   std::size_t found;
   string name = line;
-  found = name.find("st_mtd");
-  if (found==std::string::npos)
-    found = name.find("st_physics");
-  if (found==std::string::npos)
-    found = name.find("st_hlt");
+  found = name.find("st_physics");
   if (found!=std::string::npos)
   name.erase(0,found);
 
-  if(name.find("st_mtd_adc") != std::string::npos)
-    name.erase(0,11);
-  else if(name.find("st_mtd") != std::string::npos)
-    name.erase(0,7);
-  else if(name.find("st_physics_adc") != std::string::npos)
+  if(name.find("st_physics_adc") != std::string::npos)
     name.erase(0,15);
   else if(name.find("st_physics") != std::string::npos)
     name.erase(0,11);
-  else if(name.find("st_hlt_adc") != std::string::npos)
-    name.erase(0,11);
-  else if(name.find("st_hlt") != std::string::npos)
-    name.erase(0,7);
   
- 
   name.erase(8,name.length());
-
   Int_t run = atoi(name.c_str());
   Int_t year = run/1e6 - 1;
 
 
   if(iMC==1)    cout << "[i] Simulation" << endl;
   else          cout << "[i] Real data" << endl;
-
   if(dataType==0)       cout << "[i] Reading StEvent" << endl;
   else if(dataType==1)  cout << "[i] Reading MuDst"   << endl;
   else if(dataType==2)  cout << "[i] Reading PicoDst" << endl;
-
-  if(year==16)
-    {
-      gSystem->Load("StPicoEvent");
-    }
 
   cout << "[i] Year " << year << endl;
 
@@ -129,40 +96,18 @@ void jpsi_Maker(Int_t nevents=1,
     }
   else if(dataType==1)
     {
-      char theFilter[80];
-      sprintf(theFilter,".MuDst.root:MuDst.root");
-      StMuDstMaker *mudstMaker = new StMuDstMaker(0,0,"",fileList,theFilter,1000);   // set up maker in read mode
-      mudstMaker->Init();
-      mudstMaker->SetStatus("*",0);
-      mudstMaker->SetStatus("MuEvent",1);
-      mudstMaker->SetStatus("PrimaryVertices",1);
-      mudstMaker->SetStatus("PrimaryTracks",1);
-      mudstMaker->SetStatus("GlobalTracks",1);
-      mudstMaker->SetStatus("CovGlobTrack",1);
-      mudstMaker->SetStatus("BTof*",1);
-      mudstMaker->SetStatus("MTD*",1);
     }
   else if(dataType==2)
     {
-      StPicoDstMaker *picoMaker = 0x0;
-      if(year==16) picoMaker = new StPicoDstMaker(StPicoDstMaker::IoRead,fileList,"picoDst");
-      else         picoMaker = new StPicoDstMaker(0,fileList,"picoDst");
-
-      printf("\n====================================\n");
-      printf("Warning: disabling non-analysis makers when running PicoDst\n");
-      printf("====================================\n\n");
-
-      runVpdCaliMaker = kFALSE;
-      runHitMaker     = kFALSE;
-      runMatchMaker   = kFALSE;
     }
 
   St_db_Maker *dbMk;
   StMagFMaker *magfMk;
-  if((runHitMaker || runMatchMaker || runMtdCaliMaker || runQAMaker || runEmbedding || runTrigger)) 
+  if(runEmbedding) 
     {
       dbMk = new St_db_Maker("StarDb", "MySQL:StarDb", "$STAR/StarDb","StarDb");
       if(dataType==2) dbMk->SetDateTime((2000+year)*1e4+101,0);
+      // dbMk>SetFlavor("sim","bprsCalib"); // WHAT IS THIS ??? 
       magfMk = new StMagFMaker; 
     }
   
@@ -177,88 +122,13 @@ void jpsi_Maker(Int_t nevents=1,
       StAssociationMaker *association = new StAssociationMaker();       // TPC association maker
     }
 
-  if(dataType==1 && (runVpdCaliMaker || year == 13))
-    {
-      StVpdCalibMaker *vpdCalib = new StVpdCalibMaker();
-      vpdCalib->setMuDstIn(); 
-    }
-
-  if(dataType==1 && year == 13)
-    {
-      // instantiate both VPD and BTOF CalibMakers and point them to the MuDST
-      StBTofCalibMaker *btofCalib = new StBTofCalibMaker();
-      btofCalib->setMuDstIn();
-    }
-
-  if(runHitMaker)
-    {
-      mtdHitMaker = new StMtdHitMaker("mtdHitMaker");
-      if(dataType==1) mtdHitMaker->setUseMuDst(1);
-      if(debug)       mtdHitMaker->SetDebug(1);
-      if(year==13)
-	{
-	  mtdHitMaker->setSwapBacklegInRun13(2);
-	}
-    }
-	
-  if(runMatchMaker)
-    {
-      mtdMatchMaker = new StMtdMatchMaker();
-      mtdMatchMaker->setCosmicEvent(0);
-      mtdMatchMaker->setHisto(0);
-      //mtdMatchMaker->setGeomTag("y2016");
-      //mtdMatchMaker->setMatNeighbors(1);
-      //mtdMatchMaker->setNExtraCells(3);
-      if(iMC)
-	{
-	  mtdMatchMaker->setMindEdxFitPoints(0);
-	  mtdMatchMaker->setLockBField(kTRUE);
-	}
-    }
-
-  if(runMtdCaliMaker)
-    {
-      StMtdCalibMaker *mtdCalibMaker = new StMtdCalibMaker("mtdcalib");
-    }
-/*
-  if((year==13 || runPicoCalib) && dataType==2)
-    {
-      StPicoMtdCalibMaker *picoCalibMaker = new StPicoMtdCalibMaker("picoMtdCalib");
-      picoCalibMaker->setInitFromFile(1);
-      picoCalibMaker->setApplyT0(1);
-      if(year==13)
-	picoCalibMaker->setCalibFileT0("StRoot/StPicoDstMaker/Run13_pp500.CalibDtof.offline.dat");
-    }
-*/
-
   StRefMultCorr* grefmultCorrUtil = 0x0;
   if(year==14)
     {
       grefmultCorrUtil  = CentralityMaker::instance()->getgRefMultCorr();
       grefmultCorrUtil->setVzForWeight(6, -6.0, 6.0); //this one is only for VPDMB5, but for VPD30 and VPDZDCNoVtx, just keep them and use different StRefmultCorr maker
       grefmultCorrUtil->readScaleForWeight("StRoot/StRefMultCorr/macros/weight_grefmult_vpd30_vpd5_Run14.txt");
-    }
-  else if(year==16)
-    {
-      grefmultCorrUtil  = CentralityMaker::instance()->getgRefMultCorr_P16id();
-      grefmultCorrUtil->setVzForWeight(6, -6.0, 6.0);
-      grefmultCorrUtil->readScaleForWeight("StRoot/StRefMultCorr/macros/weight_grefmult_VpdnoVtx_Vpd5_Run16.txt");
-    }
-
-  if(runQAMaker)
-    {
-      StMtdQAMaker *qaMaker = new StMtdQAMaker();
-      if(dataType==1) qaMaker->setMuDstIn(1);
-      qaMaker->setFillQATree(1);
-      qaMaker->setOutTreeFileName(outtree);
-      qaMaker->setCosmic(0);
-      if(debug)
-	{
-	  qaMaker->setPrintMemory();
-	  qaMaker->setPrintCpu();
-	  qaMaker->SetDebug(1);
-	}
-    }
+    }š
 
   StMtdJpsiUtil *mtdUtil = 0x0;
   if(runJpsiMaker || runEventMixing || runEmbedding || runTrigger || runRunQA || runMtdStudy)
