@@ -286,8 +286,8 @@ void ups_Maker(Int_t nevents=10,
 	chain->Finish();
 
 	if(runEmbedding) {
-		TFile *fout = new TFile(Form("jpsi.embed.%s",outroot),"RECREATE");
-		embed->GetHistList()->Write();
+		TFile *fout = new TFile(Form("ups.embed.%s",outroot),"RECREATE");
+		//embed->GetHistList()->Write();
 		fout->Close();
 		delete fout;	}
 
