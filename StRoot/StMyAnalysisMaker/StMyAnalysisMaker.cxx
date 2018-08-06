@@ -605,10 +605,12 @@ bool StMyAnalysisMaker::SelectTrack(StPicoTrack* t){ 	// some cuts already in pi
     #ifndef VERS_P17
     Short_t index = t->emcPidTraitsIndex();
     StPicoEmcPidTraits* emctraits = mPicoDst->emcPidTraits(index);
+    Float_t pidE = emctraits->e();
     #endif
     #ifdef VERS_P17
     Short_t index = t->bemcPidTraitsIndex();
     StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);
+    Float_t pidE = emctraits->bemcE();
     #endif
     
     #ifndef EMCEFF
@@ -619,10 +621,10 @@ bool StMyAnalysisMaker::SelectTrack(StPicoTrack* t){ 	// some cuts already in pi
     //if ( fabs( emctraits->phiDist() ) > 0.05) return false;
     hTracksSelection->Fill(11);
 
-    if ( (emctraits->e()/t->pMom().mag() < 0.3) || (emctraits->e()/t->pMom().mag() > 1.8)) return false;
+    if ( (pidE/t->pMom().mag() < 0.3) || (pidE/t->pMom().mag() > 1.8)) return false;
     hTracksSelection->Fill(12);
 
-    if (emctraits->e() < 0.1) return false;
+    if (pidE < 0.1) return false;
     hTracksSelection->Fill(13);
 
     //if ( (emctraits->e0()/emctraits->e()) < 0.5) return false;
@@ -808,9 +810,9 @@ void StMyAnalysisMaker::DoRefMultCorr(StPicoEvent* eve) {
     	grefmultCorrUtil->initEvent(eve->grefMult(), eve->primaryVertex().z(), eve->ZDCx());
     #endif
 
-    // P17 version -- needs to be defined! using P16v for now
+    // P17 version -- needs to be defined! using P15v for now
     #ifdef VERS_P17
-        StRefMultCorr* grefmultCorrUtil = CentralityMaker::instance()->getgRefMultCorr_VpdMB30() ;
+        StRefMultCorr* grefmultCorrUtil = CentralityMaker::instance()->getgRefMultCorr() ;
         grefmultCorrUtil->init(15075008);
         //grefmultCorrUtil->setVzForWeight(6, -6.0, 6.0);           //THESE ONLY FOR VPDMB5
         //grefmultCorrUtil->readScaleForWeight("StRoot/StRefMultCorr/macros/weight_grefmult_vpd30_vpd5_Run14_P16id.txt");
@@ -916,12 +918,14 @@ bool StMyAnalysisMaker::GetBEMCdist(StPicoTrack* t, float* d) {
     Short_t index = t->emcPidTraitsIndex();
     if (index < 0) return false;        
     StPicoEmcPidTraits* emc = mPicoDst->emcPidTraits(index);          //this accesses the cluster 
+    Float_t pidE1 = emc->e1();
     #endif
 
     #ifdef VERS_P17
     Short_t index = t->bemcPidTraitsIndex();
     if (index < 0) return false;        
     StPicoBEmcPidTraits* emc = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
+    Float_t pidE1 = emc->btowE();
     #endif
     
     if (! emc) return false;
@@ -948,7 +952,12 @@ bool StMyAnalysisMaker::GetBEMCdist(StPicoTrack* t, float* d) {
         float Ecur = 0;
         for (int j = 0; j < nBtow; ++j)
         {
+            #ifndef VERS_P17
             StPicoBTOWHit* bhit = mPicoDst->btowHit(j);
+            #endif
+            #ifdef VERS_P17
+            StPicoBTowHit* bhit = mPicoDst->btowHit(j);
+            #endif
             if (bhit->id() != neighbors[i]) continue;
             Ecur = bhit->energy();
             break;
@@ -975,14 +984,20 @@ bool StMyAnalysisMaker::GetBEMCdist(StPicoTrack* t, float* d) {
         geomBEMC->getEta(id3,eta3);
         geomBEMC->getPhi(id3,phi3); }
 
-    float ecluster = emc->e1() + e2 + e3;
+
+    float ecluster = pidE1 + e2 + e3;
     if (ecluster==0) return false;
-    etaCluster = (eta1*emc->e1()+eta2*e2+eta3*e3)/ecluster;
-    clx = (cos(phi1)*emc->e1()+cos(phi2)*e2+cos(phi3)*e3)/ecluster;
-    cly = (sin(phi1)*emc->e1()+sin(phi2)*e2+sin(phi3)*e3)/ecluster;
+    etaCluster = (eta1*pidE1+eta2*e2+eta3*e3)/ecluster;
+    clx = (cos(phi1)*pidE1+cos(phi2)*e2+cos(phi3)*e3)/ecluster;
+    cly = (sin(phi1)*pidE1+sin(phi2)*e2+sin(phi3)*e3)/ecluster;
     phiCluster = atan2(cly,clx);
 
+    #ifndef VERS_P17
     StPhysicalHelixD th = t->helix();
+    #endif
+    #ifdef VERS_P17
+    StPhysicalHelixD th = t->helix(mEvent->bField());
+    #endif
     bool okBEMC = mEmcPos->projTrack(positionBEMC,momentumBEMC,&th,mEvent->bField(),geomBEMC->Radius());
     if (!okBEMC) return false;
     etaTrack = positionBEMC->pseudoRapidity();
@@ -1037,7 +1052,12 @@ bool StMyAnalysisMaker::FillTree() {
     int nBtow = mPicoDst->numberOfBTOWHits();
     for (int iTow = 0; iTow < nBtow; iTow++)
     {
+        #ifndef VERS_P17
         StPicoBTOWHit* bhit = mPicoDst->btowHit(iTow);
+        #endif
+        #ifdef VERS_P17
+        StPicoBTowHit* bhit = mPicoDst->btowHit(iTow);
+        #endif
         if (bhit->adc()>>4 < 19) continue;
         TrigTowersAdcOnly.push_back(iTow);
         for (int iTrig = 0; iTrig < nTrig; iTrig++)
@@ -1070,7 +1090,23 @@ bool StMyAnalysisMaker::FillTree() {
         float etaphi[2];
         etaphi[0]=999, etaphi[1]=999;
         bool getBEMC = GetBEMCdist(t, etaphi);
+        #ifndef VERS_P17
         Float_t dca = t->helix().distance(primVpos);
+        Float_t pidE = emctraits->e();
+        Float_t pidE0 = emctraits->e0();
+        Float_t pidE1 = emctraits->e1();
+        Float_t pidZdist = emctraits->zDist();
+        Float_t pidPhidist = emctraits->phiDist();
+        #endif
+        #ifdef VERS_P17
+        Float_t dca = t->helix(mEvent->bField()).distance(primVpos);
+        Float_t pidE = emctraits->bemcE();
+        Float_t pidE0 = emctraits->bemcE0();
+        Float_t pidE1 = emctraits->btowE();
+        Float_t pidZdist = emctraits->bemcZDist();
+        Float_t pidPhidist = emctraits->bemcPhiDist();
+        #endif
+
 
         if (t->nHitsFit() < 10)             continue;
         if ((float)t->nHitsFit()/t->nHitsMax() < 0.52) continue;
@@ -1080,9 +1116,9 @@ bool StMyAnalysisMaker::FillTree() {
         if (t->nSigmaElectron() > 3.5)      continue;
         if (fabs(t->pMom().pseudoRapidity() ) > 1.1) continue;
         if (dca > 3)                        continue;
-        if (emctraits->e()/t->pMom().mag() < 0.2) continue;
-        if (emctraits->e()/t->pMom().mag() > 1.9) continue;
-        if (emctraits->e() < 0.1)           continue;
+        if (pidE/t->pMom().mag() < 0.2) continue;
+        if (pidE/t->pMom().mag() > 1.9) continue;
+        if (pidE < 0.1)           continue;
         if (sqrt(etaphi[0]*etaphi[0]+etaphi[1]*etaphi[1]) > 0.06) continue;
         if (t->pMom().mag() < 2.0)          continue;
     
@@ -1090,15 +1126,25 @@ bool StMyAnalysisMaker::FillTree() {
         int isTrigger = 0;
         for (int iTrg = 0; iTrg < TrigTowers.size(); iTrg++)
         {
+            #ifndef VERS_P17
             StPicoBTOWHit* bhit = mPicoDst->btowHit(TrigTowers[iTrg]);
-            if ( fabs(emctraits->e1() - bhit->energy() ) > 0.01 &&
-                 fabs(emctraits->e0() - bhit->energy() ) > 0.01 ) continue;
+            #endif
+            #ifdef VERS_P17
+            StPicoBTowHit* bhit = mPicoDst->btowHit(TrigTowers[iTrg]);
+            #endif
+            if ( fabs(pidE1 - bhit->energy() ) > 0.01 &&
+                 fabs(pidE0 - bhit->energy() ) > 0.01 ) continue;
             isTrigger = 1;  }
         for (int iTrg = 0; iTrg < TrigTowersAdcOnly.size(); iTrg++)
         {
+            #ifndef VERS_P17
             StPicoBTOWHit* bhit = mPicoDst->btowHit(TrigTowersAdcOnly[iTrg]);
-            if ( fabs(emctraits->e1() - bhit->energy() ) > 0.01 &&
-                 fabs(emctraits->e0() - bhit->energy() ) > 0.01 ) continue;
+            #endif
+            #ifdef VERS_P17
+            StPicoBTowHit* bhit = mPicoDst->btowHit(TrigTowersAdcOnly[iTrg]);
+            #endif
+            if ( fabs(pidE1 - bhit->energy() ) > 0.01 &&
+                 fabs(pidE0 - bhit->energy() ) > 0.01 ) continue;
             isTrigger = isTrigger ? 3 : 2;  }
 
         tElePt[nElectrons]          = t->pMom().perp();
@@ -1116,10 +1162,10 @@ bool StMyAnalysisMaker::FillTree() {
         tEleDedx[nElectrons]        = t->dEdx();
         tEleNSigE[nElectrons]       = t->nSigmaElectron();
         
-        tEleE[nElectrons]           = emctraits->e0();
-        tEleEcl[nElectrons]         = emctraits->e();
-        tEleZDist[nElectrons]       = emctraits->zDist();
-        tElePhiDist[nElectrons]     = emctraits->phiDist();
+        tEleE[nElectrons]           = pidE0;
+        tEleEcl[nElectrons]         = pidE;
+        tEleZDist[nElectrons]       = pidZdist;
+        tElePhiDist[nElectrons]     = pidPhidist;
         tEleR[nElectrons]           = sqrt(etaphi[0]*etaphi[0]+etaphi[1]*etaphi[1]);
         tEleTrig[nElectrons]        = isTrigger;
 
@@ -1340,8 +1386,13 @@ Int_t StMyAnalysisMaker::Make() {
     int nBtow = mPicoDst->numberOfBTOWHits();
     //cout << "-----EVENT ID " << mEvent->eventId() << endl;
     for (int i = 0; i < nBtow; i++)
-    {
+    {   
+        #ifndef VERS_P17
         StPicoBTOWHit* bhit = mPicoDst->btowHit(i);
+        #endif
+        #ifdef VERS_P17
+        StPicoBTowHit* bhit = mPicoDst->btowHit(i);
+        #endif
         hBtowAdcId->Fill(bhit->adc(), bhit->id());
         //printf("--BTOW ID %i -- adc  -- %i -- energy -- %f \n",bhit->id(), bhit->adc(), bhit->energy());
     }
@@ -1352,14 +1403,24 @@ Int_t StMyAnalysisMaker::Make() {
     {
         #ifndef VERS_P17
         StPicoEmcPidTraits* emctraits = mPicoDst->emcPidTraits(i);
+        Float_t pidE = emctraits->e();
+        Float_t pidE0 = emctraits->e0();
+        Float_t pidZdist = emctraits->zDist();
+        Float_t pidPhidist = emctraits->phiDist();
+        Float_t pidAdc0 = emctraits->adc0();
         #endif
         #ifdef VERS_P17
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(i);
+        Float_t pidE = emctraits->bemcE();
+        Float_t pidE0 = emctraits->bemcE0();
+        Float_t pidZdist = emctraits->bemcZDist();
+        Float_t pidPhidist = emctraits->bemcPhiDist();
+        Float_t pidAdc0 = emctraits->bemcAdc0();
         #endif
-        hEmcAdcId->Fill(emctraits->adc0(),emctraits->btowId());
-        hEmcE->Fill(emctraits->e());
-        if (emctraits->e() != 0) hEmcE0vE->Fill(emctraits->e0()/emctraits->e());
-        hEmczDistphiDist->Fill(emctraits->zDist(),emctraits->phiDist());
+        hEmcAdcId->Fill(pidAdc0,emctraits->btowId());
+        hEmcE->Fill(pidE);
+        if (pidE != 0) hEmcE0vE->Fill(pidE0/pidE);
+        hEmczDistphiDist->Fill(pidZdist,pidPhidist);
         hEmcTrackIndex->Fill(emctraits->trackIndex());  // how many clusters dont have associated tracks ?
     }
     //-------------------------------------------------------
@@ -1369,7 +1430,12 @@ Int_t StMyAnalysisMaker::Make() {
     vector<int> TrigTowers1;
     for (int i = 0; i < nBtow; i++)
     {
+        #ifndef VERS_P17
         StPicoBTOWHit* bhit = mPicoDst->btowHit(i);
+        #endif
+        #ifdef VERS_P17
+        StPicoBTowHit* bhit = mPicoDst->btowHit(i);
+        #endif
         if (bhit->adc()>>4 < 19) continue;
         for (int j = 0; j < nTrig; j++)
         {
@@ -1428,38 +1494,50 @@ Int_t StMyAnalysisMaker::Make() {
         #ifndef VERS_P17
         Short_t index = t->emcPidTraitsIndex();
         if (index < 0) continue;        
-        StPicoEmcPidTraits* emctraits = mPicoDst->emcPidTraits(index);          //this accesses the cluster 
+        StPicoEmcPidTraits* emctraits = mPicoDst->emcPidTraits(index);          //this accesses the cluster
+        Float_t pidE = emctraits->e();
+        Float_t pidE0 = emctraits->e0();
+        Float_t pidE1 = emctraits->e1();
+        Float_t pidZdist = emctraits->zDist();
+        Float_t pidPhidist = emctraits->phiDist(); 
+        Float_t pidAdc0 = emctraits->adc0();
         #endif
         #ifdef VERS_P17
         Short_t index = t->bemcPidTraitsIndex();
         if (index < 0) continue;        
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
+        Float_t pidE = emctraits->bemcE();
+        Float_t pidE0 = emctraits->bemcE0();
+        Float_t pidE1 = emctraits->btowE();
+        Float_t pidZdist = emctraits->bemcZDist();
+        Float_t pidPhidist = emctraits->bemcPhiDist();
+        Float_t pidAdc0 = emctraits->bemcAdc0();
         #endif
         if (! emctraits) continue;
         #endif
         hTracksSelection->Fill(2);
 
         // TRACK HISTOGRAMS
-        Float_t dca = (t->dcaGeometry().helix().origin() - primVpos ).mag();
+        //Float_t dca = (t->dcaGeometry().helix().origin() - primVpos ).mag();
         hTrackdEdxvsp->Fill(t->pMom().mag(),t->dEdx());
         hTracknSigmaElectronvsp->Fill(t->pMom().mag(),t->nSigmaElectron());
         hTracknSigmaPionvsp->Fill(t->pMom().mag(),t->nSigmaPion());
         hTrackEtaPhiPtG->Fill(t->gPt(),t->gMom(pvtx, bfield).pseudoRapidity(),t->gMom(pvtx, bfield).phi());
         hTrackEtaPhiPtP->Fill(t->pMom().perp(),t->pMom().pseudoRapidity(),t->pMom().phi());
-        hTrackDca->Fill(dca);
+        //hTrackDca->Fill(dca);
         hTracknHitsRatio->Fill((float)t->nHitsFit()/t->nHitsMax());
         hTracknHitsFit->Fill(t->nHitsFit());
 
         #ifndef EMCEFF
-        if (t->pMom().mag() != 0) hTrackEoverpvsp->Fill(t->pMom().mag(), emctraits->e()/t->pMom().mag());
-        hTrackAdc0vsTower->Fill(emctraits->adc0(),emctraits->btowId());
-        hTrackzDistphiDist->Fill(emctraits->zDist(),emctraits->phiDist());
-        if (emctraits->e() != 0) hTrackE0vE->Fill(emctraits->e0()/emctraits->e());
-        hTrackphiDist2->Fill(emctraits->phiDist(),emctraits->phiTowDist());
+        if (t->pMom().mag() != 0) hTrackEoverpvsp->Fill(t->pMom().mag(), pidE/t->pMom().mag());
+        hTrackAdc0vsTower->Fill(pidAdc0,emctraits->btowId());
+        hTrackzDistphiDist->Fill(pidZdist,pidPhidist);
+        if (pidE != 0) hTrackE0vE->Fill(pidE0/pidE);
+        //hTrackphiDist2->Fill(emctraits->phiDist(),emctraits->phiTowDist());
 
-        if (t->pMom().mag() != 0) hTrackSigmavsEoverp->Fill(t->nSigmaElectron(),emctraits->e()/t->pMom().mag());
-        if (emctraits->e() != 0) hTrackSigmavsE0vE->Fill(t->nSigmaElectron(),emctraits->e0()/emctraits->e());
-        if (emctraits->e() != 0) hTrackDistvE0E->Fill(emctraits->zDist()*emctraits->zDist()+10000*emctraits->phiDist()*emctraits->phiDist(),emctraits->e0()/emctraits->e());
+        if (t->pMom().mag() != 0) hTrackSigmavsEoverp->Fill(t->nSigmaElectron(),pidE/t->pMom().mag());
+        if (pidE != 0) hTrackSigmavsE0vE->Fill(t->nSigmaElectron(),pidE0/pidE);
+        if (pidE != 0) hTrackDistvE0E->Fill(pidZdist*pidZdist+10000*pidPhidist*pidPhidist,pidE0/pidE);
         float etaphi[2];
         etaphi[0]=999, etaphi[1]=999;
 
@@ -1480,9 +1558,9 @@ Int_t StMyAnalysisMaker::Make() {
         if (getBEMC) {
             hTrackEtaPhiD->Fill(etaphi[0],etaphi[1]);
             hTrackR->Fill(sqrt(etaphi[0]*etaphi[0]+etaphi[1]*etaphi[1])); 
-            hTrackRvDist->Fill(sqrt(etaphi[0]*etaphi[0]+etaphi[1]*etaphi[1]),sqrt(emctraits->zDist()*emctraits->zDist()+10000*emctraits->phiDist()*emctraits->phiDist()));   
-            hTracketaDistzDist->Fill(etaphi[0],emctraits->zDist());
-            hTrackphiDistphiDist->Fill(etaphi[1],emctraits->phiDist());    }
+            hTrackRvDist->Fill(sqrt(etaphi[0]*etaphi[0]+etaphi[1]*etaphi[1]),sqrt(pidZdist*pidZdist+10000*pidPhidist*pidPhidist));   
+            hTracketaDistzDist->Fill(etaphi[0],pidZdist);
+            hTrackphiDistphiDist->Fill(etaphi[1],pidPhidist);    }
         #endif  
         hTrackpMomgMom->Fill(t->pMom().mag(),t->gPtot());
 
@@ -1493,13 +1571,18 @@ Int_t StMyAnalysisMaker::Make() {
 
         #ifndef EMCEFF
    		// DCA STUDY
-        double primvpos2[] = {primVpos.x(), primVpos.y(), primVpos.z()};
-        Float_t dca2 = t->dcaGeometry().thelix().Dca(primvpos2);
+        //double primvpos2[] = {primVpos.x(), primVpos.y(), primVpos.z()};
+        //Float_t dca2 = t->dcaGeometry().thelix().Dca(primvpos2);
+        #ifndef VERS_P17
         Float_t dca3 = t->helix().distance(primVpos);
+        #endif
+        #ifdef VERS_P17
+        Float_t dca3 = t->helix(mEvent->bField()).distance(primVpos);
+        #endif
         //cout << "moving by " << t->helix().pathLength(primVpos) << endl;
-        StPhysicalHelixD trHelix = t->helix();
-        trHelix.moveOrigin(trHelix.pathLength(primVpos)); // doesnt do shit
-        Float_t dca4 = (trHelix.origin() - primVpos ).mag(); 
+        //StPhysicalHelixD trHelix = t->helix();
+        //trHelix.moveOrigin(trHelix.pathLength(primVpos)); // doesnt do shit
+        //Float_t dca4 = (trHelix.origin() - primVpos ).mag(); 
         //cout << "dca is " << dca << " vs " << dca2 << " vs " << dca3 << " vs " << dca4 << endl;
 
         if (dca3 > 1.5) continue;
@@ -1510,15 +1593,15 @@ Int_t StMyAnalysisMaker::Make() {
     	hElectronPhivdEdx->Fill(t->pMom().phi(),t->dEdx());
         hElectronPt->Fill(t->pMom().perp());
         hElectronP->Fill(t->pMom().mag());
-        hElectronzDistphiDist->Fill(emctraits->zDist(),emctraits->phiDist());
+        hElectronzDistphiDist->Fill(pidZdist,pidPhidist);
         hElectronDca->Fill(dca3);
-        if (emctraits->e() != 0) hElectronDistvE0E->Fill(emctraits->zDist()*emctraits->zDist()+10000*emctraits->phiDist()*emctraits->phiDist(),emctraits->e0()/emctraits->e());
+        if (pidE != 0) hElectronDistvE0E->Fill(pidZdist*pidZdist+10000*pidPhidist*pidPhidist,pidE0/pidE);
         if (getBEMC) {
             hElectronEtaPhiD->Fill(etaphi[0],etaphi[1]);
             hElectronR->Fill(sqrt(etaphi[0]*etaphi[0]+etaphi[1]*etaphi[1])); 
-            hElectronRvDist->Fill(sqrt(etaphi[0]*etaphi[0]+etaphi[1]*etaphi[1]),sqrt(emctraits->zDist()*emctraits->zDist()+10000*emctraits->phiDist()*emctraits->phiDist()));   
-            hElectronetaDistzDist->Fill(etaphi[0],emctraits->zDist());
-            hElectronphiDistphiDist->Fill(etaphi[1],emctraits->phiDist());     }
+            hElectronRvDist->Fill(sqrt(etaphi[0]*etaphi[0]+etaphi[1]*etaphi[1]),sqrt(pidZdist*pidZdist+10000*pidPhidist*pidPhidist));   
+            hElectronetaDistzDist->Fill(etaphi[0],pidZdist);
+            hElectronphiDistphiDist->Fill(etaphi[1],pidPhidist);     }
 
 
         //cout << "=3= eta is " << etaphi[0] << " phi is " << etaphi[1] << endl;
@@ -1563,9 +1646,14 @@ Int_t StMyAnalysisMaker::Make() {
         isTrigger1 = false;
         for (int j = 0; j < TrigTowers1.size(); j++)
         {
+            #ifndef VERS_P17
             StPicoBTOWHit* bhit = mPicoDst->btowHit(TrigTowers1[j]);
-            if ( fabs(emctraits->e1() - bhit->energy() ) > 0.01 &&
-            	 fabs(emctraits->e0() - bhit->energy() ) > 0.01 ) continue;
+            #endif
+            #ifdef VERS_P17
+            StPicoBTowHit* bhit = mPicoDst->btowHit(TrigTowers1[j]);
+            #endif
+            if ( fabs(pidE1 - bhit->energy() ) > 0.01 &&
+            	 fabs(pidE0 - bhit->energy() ) > 0.01 ) continue;
             isTrigger1 = true;
         	hElectronTowervp->Fill(t->pMom().mag(),bhit->id());
         }
