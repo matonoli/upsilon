@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE note [
+<!-- pre-define absolut path in one place -->
+<!ENTITY basePath "/star/u/matonoli/Ups14h/">
+]>
+
+<job fileListSyntax="paths" maxFilesPerProcess="200" minFilesPerProcess="175" simulateSubmission="false">
+
+   
+  <stdout URL="file:&basePath;out/job_$JOBID.log" />
+  <stderr URL="file:&basePath;out/job_$JOBID.err" />  
+
+  <command>
+
+    starver SL15c
+    pwd
+    cp &basePath;readPicoDst.C .
+    ls -l 
+    root4star -q -b -l readPicoDst.C\(10000000,\"$FILELIST\",\"$JOBID.root\"\) &gt;&amp; ${JOBID}.log
+    gzip ${JOBID}.log
+    ls -lrt
+
+  </command>
+
+
+ <input URL="filelist:&basePath;highPiShort.list" />
+ <output fromScratch="*.gz" toURL="file:&basePath;out/"/>
+ <output fromScratch="*.root" toURL="file:&basePath;out/"/>
+
+<SandBox installer="ZIP">
+  <Package name="LocalLibraries">
+    <File>file:&basePath;StRoot/</File>
+    <File>file:&basePath;.sl64_gcc482/</File>
+  </Package>
+</SandBox>
+
+</job>
