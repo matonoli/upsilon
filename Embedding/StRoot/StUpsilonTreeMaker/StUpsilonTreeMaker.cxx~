@@ -1,0 +1,399 @@
+//
+// Pibero Djawotho <pibero@indiana.edu>
+// Indiana University
+// 4 October 2006
+//
+// Revised 3 June 2008
+//
+
+// ROOT
+#include "TFile.h"
+#include "TTree.h"
+
+// STAR
+#include "StEventTypes.h"
+#include "StMuDSTMaker/COMMON/StMuTypes.hh"
+#include "StEmcUtil/geometry/StEmcGeom.h"
+#include "StEmcUtil/database/StBemcTables.h"
+#include "StEmcUtil/projection/StEmcPosition.h"
+#include "StDaqLib/EMC/StEmcDecoder.h"
+#include "StEmcRawMaker/defines.h"
+
+// Local
+//#include "Quarkonium.hh"
+//#include "StUpsilonCandidate.h"
+//#include "StUpsilonEvent.h"
+#include "StUpsilonTreeMaker.h"
+
+ClassImp(StUpsilonTreeMaker);
+
+int StUpsilonTreeMaker::Init()
+{
+  // const char* name = "ups.root";
+  //if (gSystem->Getenv("JOBID"))
+  //name = gSystem->ConcatFileName(gSystem->Getenv("SCRATCH"), name);
+  //mFile = TFile::Open(name, "recreate");
+  //assert(mFile);
+
+  //mTree = new TTree("ups", "Upsilon Tree");
+  //mEvent = new StUpsilonEvent;
+  //mTree->Branch("UpsilonEvent", &mEvent, 32000, 99);
+
+  mEmcDecoder = new StEmcDecoder;
+  mEmcPosition = new StEmcPosition;
+  mEmcGeom = StEmcGeom::instance("bemc");
+  mBemcTables = new StBemcTables;
+  //hNumberOfCandidates = new TH1F("hNumberOfCandidates", "Number of Candidates", 20, 0, 20);
+  mEmcHits = new TClonesArray("StMuEmcHit", 4801);
+  return StMaker::Init();
+}
+
+int StUpsilonTreeMaker::InitRun(int runNumber)
+{
+  mEmcDecoder->SetDateTime(GetDate(), GetTime());
+  mBemcTables->loadTables(this);
+
+  // Generate bemcStatus.txt for L2 trigger
+  TString bemcStatus = Form("bemcStatus.txt.%s.%d", gSystem->HostName(), gSystem->GetPid());
+  makeBemcStatusTable(bemcStatus);
+
+  // L2 parameters
+  //static int userInt[] = { 14, 75, 0, 0, 3 };
+  //static int userInt[] = { 14, 80, 0, 0, 3 };
+  //static float userFloat[] = { 4.0, 2.5, 6.0, 15.0, 0.5 };
+
+  // Initialize L2 algorithm
+  //ups.init(runNumber, userInt, userFloat);
+
+  return StMaker::InitRun(runNumber);
+}
+
+void StUpsilonTreeMaker::Clear(Option_t* option)
+{
+  mEmcHits->Clear(option);
+  //mEvent->Clear(option);
+  StMaker::Clear(option);
+}
+
+int StUpsilonTreeMaker::Make()
+{
+  if (!GetDataSet("MuDst")) {
+    LOG_WARN << "No MuDst" << endm;
+    return kStWarn;
+  }
+
+  // LOG_INFO << "TPC zvertex = " << StMuDst::event()->primaryVertexPosition().z() << endm;
+  //LOG_INFO << "BBC timebin = " << StMuDst::event()->bbcTriggerDetector().onlineTimeDifference() << endm;
+
+  // Fill array of BEMC ADC and TClonesArray of StMuEmcHit
+  unsigned short bemcData[4800];
+
+  for (int softId = 1; softId <= 4800; ++softId) {
+    int daqId;
+    mEmcDecoder->GetDaqIdFromTowerId(softId, daqId);
+    int adc = StMuDst::muEmcCollection()->getTowerADC(softId);
+    bemcData[daqId] = adc;
+    int status;
+    mBemcTables->getStatus(BTOW, softId, status);
+    if (status != 1) continue;
+    float ped, rms;
+    mBemcTables->getPedestal(BTOW, softId, 0, ped, rms);
+    if (adc < ped + 3 * rms) continue;
+    float calib;
+    mBemcTables->getCalib(BTOW, softId, 1, calib);
+    float energy = calib * (adc - ped);
+    StMuEmcHit* hit = addEmcHit(softId);
+    hit->setId(softId);
+    hit->setAdc(adc);
+    hit->setEnergy(energy);
+    hit->setCalType(0);
+  }
+
+  // Initialize trigger data
+  //TrgDataType trgData;
+  //memset(&trgData, 0, sizeof(trgData));
+
+  // Get L2 decision
+  //ups.run(&trgData, bemcData);
+  //hNumberOfCandidates->Fill(ups.candidates.size());
+
+  //if (ups.candidates.empty()) return kStOk;
+
+  // Fill event
+  //mEvent->setEventHeader(StMuDst::event());
+  //mEvent->numberOfTriggerCandidates = ups.candidates.size();
+
+  // Loop over primary tracks, extrapolate track to BEMC, and get tower id.
+  //const double magField = StMuDst::event()->magneticField() * kilogauss / tesla;
+  //vector<StMuTrack*> tracks;
+  //multimap<int,StMuTrack*> trackMap;
+  //typedef multimap<int,StMuTrack*>::iterator MI;
+  //TIter next(StMuDst::primaryTracks());
+  //while (StMuTrack* track = (StMuTrack*)next()) {
+  //if (accept(track)) {
+  //  StThreeVectorD position, momentum;
+  //  if (mEmcPosition->trackOnEmc(&position, &momentum, track, magField)) {
+  //float eta = position.pseudoRapidity();
+  //float phi = position.phi();
+  //int id;
+  //if (mEmcGeom->getId(phi, eta, id) == 0) {
+  //  tracks.push_back(track);
+  //  trackMap.insert(make_pair(id, track));
+  //}
+  //  }
+  //}
+  // }
+
+  // Loop over L2 tower pair candidates and collect tower neighbors.
+  // Next associate tracks with each cluster and combine tracks to
+  // create invariant mass spectrum.
+  // for (size_t iCandidate = 0; iCandidate < ups.candidates.size(); ++iCandidate) {
+    // First tower cluster
+    //int towerId1 = ups.candidates[iCandidate].first;
+    // Collect tower neighbors
+  //   vector<int> towers1;
+  //towers1.push_back(towerId1);
+  //getTowerNeighbors(towerId1, towers1);
+
+    // Collect associated tracks
+    //vector<StMuTrack*> tracks1;
+  //    for (size_t i = 0; i < towers1.size(); ++i) {
+  //  pair<MI,MI> p = trackMap.equal_range(towers1[i]);
+  //  for (MI k = p.first; k != p.second; ++k) {
+  //tracks1.push_back(k->second);
+  //  }
+  //}
+
+    // Second tower cluster
+  //    int towerId2 = ups.candidates[iCandidate].second;
+    /// Collect tower neighbors
+  //  vector<int> towers2;
+  //towers2.push_back(towerId2);
+  //getTowerNeighbors(towerId2, towers2);
+
+    // Collect associated tracks
+  // vector<StMuTrack*> tracks2;
+  //for (size_t i = 0; i < towers2.size(); ++i) {
+  //  pair<MI,MI> p = trackMap.equal_range(towers2[i]);
+  //  for (MI k = p.first; k != p.second; ++k) {
+  //tracks2.push_back(k->second);
+  //  }
+  //}
+
+    // Create Upsilon candidates
+    //for (size_t i = 0; i < tracks1.size(); ++i) {
+  //StMuTrack* track1 = tracks1[i];
+  //  StLorentzVectorF p1(track1->p(), track1->p().massHypothesis(StElectron::instance()->mass()));
+
+      // Calculate energy of trigger tower and cluster
+  //  StMuEmcHit* hit1 = getEmcHit(towers1[0]);
+  //  float Etrig1 = hit1 ? hit1->getEnergy() : 0;
+  //  float Ecluster1 = 0;
+  //   for (size_t k = 0; k < towers1.size(); ++k) {
+  //StMuEmcHit* hit = getEmcHit(towers1[k]);
+  //Ecluster1 += hit ? hit->getEnergy() : 0;
+  //  }
+
+  //  for (size_t j = 0; j < tracks2.size(); ++j) {
+	//StMuTrack* track2 = tracks2[j];
+  //	StLorentzVectorF p2(track2->p(), track2->p().massHypothesis(StElectron::instance()->mass()));
+  //StLorentzVectorF p = p1 + p2;
+  //
+	// Calculate energy of trigger tower and cluster
+	//StMuEmcHit* hit2 = getEmcHit(towers2[0]);
+  //	float Etrig2 = hit2 ? hit2->getEnergy() : 0;
+  //float Ecluster2 = 0;
+  //for (size_t k = 0; k < towers2.size(); ++k) {
+  //  StMuEmcHit* hit = getEmcHit(towers2[k]);
+  //  Ecluster2 += hit ? hit->getEnergy() : 0;
+  //}
+
+	// We found an Upsilon candidate!
+  //	StUpsilonCandidate* ups = new ((*mEvent->candidates)[mEvent->candidates->GetEntriesFast()]) StUpsilonCandidate;
+
+  //	ups->charge = track1->charge() + track2->charge();
+  //ups->p = p.vect().mag();
+  //ups->pt = p.perp();
+  //ups->pz = p.pz();
+  //ups->eta = p.pseudoRapidity();
+  //ups->phi = p.phi();
+  //ups->y = p.rapidity();
+  //ups->m = p.m();
+  //ups->cosTheta = track1->p().unit() * track2->p().unit();
+
+  //ups->charge1 = track1->charge();
+  //ups->p1 = track1->p().mag();
+  //ups->pt1 = track1->pt();
+  //ups->pz1 = track1->p().z();
+  //ups->eta1 = track1->eta();
+  //ups->phi1 = track1->phi();
+  //ups->nHitsFit1 = track1->nHitsFit();
+  //ups->dEdx1 = track1->dEdx() / keV;
+	//ups->Etrig1 = Etrig1;
+  //	ups->Ecluster1 = Ecluster1;
+  //ups->nSigmaElectron1 = track1->nSigmaElectron();
+  //ups->nSigmaPion1 = track1->nSigmaPion();
+  //ups->dcaGlobal1 = track1->dcaGlobal().mag();
+
+  //ups->charge2 = track2->charge();
+	//ups->p2 = track2->p().mag();
+  //	ups->pt2 = track2->pt();
+	//ups->pz2 = track2->p().z();
+  //	ups->eta2 = track2->eta();
+  //ups->phi2 = track2->phi();
+  //ups->nHitsFit2 = track2->nHitsFit();
+  //ups->dEdx2 = track2->dEdx() / keV;
+  //ups->Etrig2 = Etrig2;
+  //ups->Ecluster2 = Ecluster2;
+  //ups->nSigmaElectron2 = track2->nSigmaElectron();
+  //ups->nSigmaPion2 = track2->nSigmaPion();
+  //ups->dcaGlobal2 = track2->dcaGlobal().mag();
+  //  }
+  //}
+  // }
+
+  // if (!mEvent->candidates->IsEmpty()) {
+  //mTree->Fill();
+  //}
+
+  return kStOk;
+}
+
+int StUpsilonTreeMaker::Finish()
+{
+  //mFile->Write();
+  //mFile->Close();
+  return kStOk;
+}
+
+//bool StUpsilonTreeMaker::accept(StMuEvent* event) const
+//{
+  // return (event->triggerIdCollection().nominal().isTrigger(117602) ||
+  //  event->triggerIdCollection().nominal().isTrigger(137603));
+//}
+
+//bool StUpsilonTreeMaker::accept(StMuTrack* track) const
+//{
+//return (track->flag() > 0 &&
+//  track->flag() != 701 &&
+//  track->flag() != 801 &&
+//  track->flag() != 901 &&
+	// track->pt() > 0.2 &&
+// track->p().mag() < 100 &&
+//  track->nHitsFit() > 20 &&
+//  track->nHitsFit() / (float)track->nHitsPoss() > 0.52 &&
+//  3.0 * keV < track->dEdx() && track->dEdx() < 6.0 * keV);
+//}
+
+StMuEmcHit* StUpsilonTreeMaker::getEmcHit(int id) const
+{
+return (StMuEmcHit*)mEmcHits->At(id);
+}
+
+StMuEmcHit* StUpsilonTreeMaker::addEmcHit(int id)
+{
+ return new ((*mEmcHits)[id]) StMuEmcHit;
+}
+
+int StUpsilonTreeMaker::makeBemcStatusTable(const char* filename)
+{
+  ofstream out(filename);
+  if (!out) return kStWarn;
+
+  out << "##################################################################################\n";
+  out << "# This plain text file contains the complete BEMC trigger configuration\n";
+  out << "# Generated by the online BEMC trigger monitoring program on emc01.starp.bnl.gov\n";
+  out << "# Timestamp: " << GetDateTime().AsSQLString() << '\n';
+  out << "#\n";
+  out << "# SoftId\tCrate\tCrate seq\tTower unmasked?\tPatch unmasked in HT?\tPatch unmasked in sum?\tPedestal        triggerPatch\n";
+
+  for (int softId = 1; softId <= 4800; ++softId) {
+    int daqId;
+    int crate;
+    int crateSeq;
+    int towerUnmasked;
+    int patchUnmaskedInHT;
+    int patchUnmaskedInSum;
+    float pedestal;
+    int patch;
+
+    mEmcDecoder->GetDaqIdFromTowerId(softId, daqId);
+    mEmcDecoder->GetTowerCrateFromDaqId(daqId, crate, crateSeq);
+    mEmcDecoder->GetTriggerPatchFromCrate(crate, crateSeq, patch);
+    mBemcTables->getTriggerPatchStatus(patch, patchUnmaskedInSum);
+    mBemcTables->getTriggerHighTowerStatus(patch, patchUnmaskedInHT);
+    mBemcTables->getTriggerTowerStatus(crate, crateSeq, towerUnmasked);
+    mBemcTables->getTriggerPedestal(crate, crateSeq, pedestal);
+
+    out << "SoftId " << softId << '\t'
+        << crate << '\t'
+        << crateSeq << '\t'
+        << towerUnmasked << '\t'
+        << patchUnmaskedInHT << '\t'
+        << patchUnmaskedInSum << '\t'
+        << pedestal << '\t'
+        << patch << '\n';
+  }
+
+  out << "#\n";
+
+  int pedestalShift;
+  mBemcTables->getTriggerPedestalShift(pedestalShift);
+
+  out << "TriggerPedestalShift " << pedestalShift << '\n';
+  out << "#\n";
+  out << "# triggerPatch\tCrate\tCrate patch\tUnmasked in HT?\tUnmasked in sum?\tBit conversion mode\tLUT formula and parameters\n";
+
+  for (int crate = 1; crate <= 30; ++crate) {
+    for (int cratePatch = 0; cratePatch < 10; ++cratePatch) {
+      int crateSeq = cratePatch * 16;
+      int patch;
+      int unmaskedInHT;
+      int unmaskedInSum;
+      int bitConvMode;
+      int formula;
+      int parameters[6];
+
+      mEmcDecoder->GetTriggerPatchFromCrate(crate, crateSeq, patch);
+      mBemcTables->getTriggerPatchStatus(patch, unmaskedInSum);
+      mBemcTables->getTriggerHighTowerStatus(patch, unmaskedInHT);
+      mBemcTables->getTriggerBitConv(crate, cratePatch, bitConvMode);
+      mBemcTables->getTriggerFormulaTag(crate, cratePatch, formula);
+      mBemcTables->getTriggerFormulaParameters(crate, cratePatch, parameters);
+
+      out << "triggerPatch " << patch << '\t'
+          << crate << '\t'
+          << cratePatch << '\t'
+          << unmaskedInHT << '\t'
+          << unmaskedInSum << '\t'
+          << bitConvMode << '\t'
+          << formula << '\t'
+          << parameters[0] << '\t'
+          << parameters[1] << '\t'
+          << parameters[2] << '\t'
+          << parameters[3] << '\t'
+          << parameters[4] << '\t'
+          << parameters[5] << '\n';
+    }
+  }
+
+  out << "# End of file\n";
+  out << "##################################################################################\n";
+  out.close();
+
+  return kStOk;
+}
+
+//void StUpsilonTreeMaker::getTowerNeighbors(int id, vector<int>& neighbors)
+//{
+//for (int deta = -1; deta <= 1; ++deta) {
+//  for (int dphi = -1; dphi <= 1; ++dphi) {
+//    if (deta || dphi) {
+//int id2 = mEmcPosition->getNextTowerId(id, deta, dphi);
+//if (id2) {
+//  neighbors.push_back(id2);
+//}
+//    }
+// }
+//  }
+//}
