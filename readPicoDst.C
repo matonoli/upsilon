@@ -15,6 +15,7 @@ void readPicoDst(Int_t nEvents= 10, const Char_t *inputFile="test.list", const C
     gROOT->LoadMacro("$STAR/StRoot/StMuDSTMaker/COMMON/macros/loadSharedLibraries.C");
     loadSharedLibraries();
     
+    gSystem->Load("StPicoEvent");       //order matters?!
     gSystem->Load("StPicoDstMaker");
     gSystem->Load("StMyAnalysisMaker");
     gSystem->Load("StRefMultCorr");
@@ -22,7 +23,7 @@ void readPicoDst(Int_t nEvents= 10, const Char_t *inputFile="test.list", const C
     
     chain = new StChain();
     
-    StPicoDstMaker *picoMaker = new StPicoDstMaker(0,inputFile,"picoDst");
+    StPicoDstMaker *picoMaker = new StPicoDstMaker(2,inputFile,"picoDst");
     StMyAnalysisMaker *anaMaker = new StMyAnalysisMaker("ana",picoMaker,outputFile);
 
     chain->Init();
