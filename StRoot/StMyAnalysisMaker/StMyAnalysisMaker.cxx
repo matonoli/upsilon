@@ -4,6 +4,8 @@
 //#define VERS_P15_HIGH
 #define VERS_P17
 
+//zmena
+
 #include "StMyAnalysisMaker.h"
 #ifndef VERS_P17
 #include "StRoot/StPicoDstMaker/StPicoDst.h"
