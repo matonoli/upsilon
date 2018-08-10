@@ -183,6 +183,8 @@ private:
     TH2F* hMotherYvEta;
     TH3F* hUpsPtYPhi;
 
+    TH1F* hFillTree;
+
     TH3F* hIMpp;
     TH3F* hIMmm;
     TH3F* hIMpm;
