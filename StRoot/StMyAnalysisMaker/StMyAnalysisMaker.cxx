@@ -4,8 +4,6 @@
 //#define VERS_P15_HIGH
 #define VERS_P17
 
-//treti zmena
-
 #include "StMyAnalysisMaker.h"
 #ifndef VERS_P17
 #include "StRoot/StPicoDstMaker/StPicoDst.h"
@@ -317,6 +315,8 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hMotherYvEta            = new TH2F("hMotherYvEta","",160,-1.3,1.3,160,-1.3,1.3);
     hUpsPtYPhi              = new TH3F("hUpsPtYPhi","",200,0,20,160,-1.3,1.3,100,-3.2,3.2);
 
+    hFillTree               = new TH1F("hFillTree","",12,-0.5,11.5);
+
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
     hIMpp->Sumw2();
     hIMmm       		    = new TH3F("hIMmm","",200,0,20,10,1,21,11,-1.5,9.5);
@@ -476,6 +476,8 @@ void StMyAnalysisMaker::WriteHistograms() {
     hMotherPtEtaPhi->Write();
     hMotherYvEta->Write();
     hUpsPtYPhi->Write();
+
+    hFillTree->Write();
 
     hIMpp->Write();
     hIMmm->Write();
@@ -1035,8 +1037,11 @@ bool StMyAnalysisMaker::FillTree() {
 
     // select event
     if (! SelectTrigger(mEvent)) return false;
+    hFillTree->Fill(1);
     if ( fabs( mEvent->primaryVertex().z() ) > 100) return false;
+    hFillTree->Fill(2);
     if ( fabs( mEvent->primaryVertex().z() - mEvent->vzVpd() ) > 4) return false;
+    hFillTree->Fill(3);
 
     #ifndef VERS_P17
     int nEmcPids = mPicoDst->numberOfEmcPidTraits();
@@ -1046,6 +1051,7 @@ bool StMyAnalysisMaker::FillTree() {
     #endif
 
     if ( nEmcPids < 1) return false;
+    hFillTree->Fill(4);
 
     // find triggered tower
     vector<int> TrigTowers;
@@ -1069,6 +1075,7 @@ bool StMyAnalysisMaker::FillTree() {
         }
     }
     if (TrigTowers.size() < 1 && TrigTowersAdcOnly.size() < 1) return false;
+    hFillTree->Fill(5);
 
     //find electrons    
     int nTracks = mPicoDst->numberOfTracks();
@@ -1173,7 +1180,8 @@ bool StMyAnalysisMaker::FillTree() {
 
         nElectrons++;
     }
-    if (nElectrons < 2) return false; 
+    if (nElectrons < 2) return false;
+    hFillTree->Fill(6); 
     
     tEventId        = mEvent->eventId();
     tEventRunId     = mEvent->runId();
@@ -1235,7 +1243,10 @@ Int_t StMyAnalysisMaker::Make() {
     mEmcPos = new StEmcPosition;
 
     #ifdef FULLTREE
-    if (FillTree()) upsTree->Fill();
+    if (FillTree()){
+        upsTree->Fill();
+        cout << "Tree was filled -- FillTree() returned true" << endl;
+    }
     #endif
 
     // SELECT GOOD EVENT INCLUDING TRIGGER
