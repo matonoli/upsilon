@@ -316,6 +316,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hUpsPtYPhi              = new TH3F("hUpsPtYPhi","",200,0,20,160,-1.3,1.3,100,-3.2,3.2);
 
     hFillTree               = new TH1F("hFillTree","",12,-0.5,11.5);
+    hFillTreeElectrons      = new TH1F("hFillTreeElectrons","",20,-0.5,19.5);
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
     hIMpp->Sumw2();
@@ -478,6 +479,7 @@ void StMyAnalysisMaker::WriteHistograms() {
     hUpsPtYPhi->Write();
 
     hFillTree->Write();
+    hFillTreeElectrons->Write();
 
     hIMpp->Write();
     hIMmm->Write();
@@ -1084,6 +1086,8 @@ bool StMyAnalysisMaker::FillTree() {
     {
         StPicoTrack* t = mPicoDst->track(iTrk);
         if (! t) continue;
+        hFillTreeElectrons->Fill(1);
+
         #ifndef VERS_P17
         Short_t index = t->emcPidTraitsIndex();
         if (index < 0) return false;        
@@ -1095,6 +1099,8 @@ bool StMyAnalysisMaker::FillTree() {
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
         #endif
         if (! emctraits) continue;
+        
+        hFillTreeElectrons->Fill(2);
         
         float etaphi[2];
         etaphi[0]=999, etaphi[1]=999;
@@ -1118,18 +1124,31 @@ bool StMyAnalysisMaker::FillTree() {
 
 
         if (t->nHitsFit() < 10)             continue;
+        hFillTreeElectrons->Fill(3);
         if ((float)t->nHitsFit()/t->nHitsMax() < 0.52) continue;
+        hFillTreeElectrons->Fill(4);
         if (t->nHitsDedx() < 10)            continue;
+        hFillTreeElectrons->Fill(5);
         if (t->pMom().mag() == 0)           continue; // ->isPrimary()
+        hFillTreeElectrons->Fill(6);
         if (t->nSigmaElectron() < -2)       continue;
+        hFillTreeElectrons->Fill(7);
         if (t->nSigmaElectron() > 3.5)      continue;
+        hFillTreeElectrons->Fill(8);
         if (fabs(t->pMom().pseudoRapidity() ) > 1.1) continue;
+        hFillTreeElectrons->Fill(9);
         if (dca > 3)                        continue;
+        hFillTreeElectrons->Fill(10);
         if (pidE/t->pMom().mag() < 0.2) continue;
+        hFillTreeElectrons->Fill(11);
         if (pidE/t->pMom().mag() > 1.9) continue;
+        hFillTreeElectrons->Fill(12);
         if (pidE < 0.1)           continue;
+        hFillTreeElectrons->Fill(13);
         if (sqrt(etaphi[0]*etaphi[0]+etaphi[1]*etaphi[1]) > 0.06) continue;
+        hFillTreeElectrons->Fill(14);
         if (t->pMom().mag() < 2.0)          continue;
+        hFillTreeElectrons->Fill(15);
     
         //is trigger?
         int isTrigger = 0;
@@ -1144,6 +1163,7 @@ bool StMyAnalysisMaker::FillTree() {
             if ( fabs(pidE1 - bhit->energy() ) > 0.01 &&
                  fabs(pidE0 - bhit->energy() ) > 0.01 ) continue;
             isTrigger = 1;  }
+
         for (int iTrg = 0; iTrg < TrigTowersAdcOnly.size(); iTrg++)
         {
             #ifndef VERS_P17

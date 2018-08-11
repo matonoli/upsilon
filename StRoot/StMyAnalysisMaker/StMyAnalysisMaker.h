@@ -184,6 +184,7 @@ private:
     TH3F* hUpsPtYPhi;
 
     TH1F* hFillTree;
+    TH1F* hFillTreeElectrons;
 
     TH3F* hIMpp;
     TH3F* hIMmm;
