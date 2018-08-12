@@ -1266,6 +1266,7 @@ Int_t StMyAnalysisMaker::Make() {
     if (FillTree()){
         upsTree->Fill();
         cout << "Tree was filled -- FillTree() returned true" << endl;
+        hFillTree->Fill(7);
     }
     #endif
 
