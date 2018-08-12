@@ -343,7 +343,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hElectrondEdxvsP        = new TH3F("hElectrondEdxvsP","",150,0,15,200,1,5,10,0,10);
     hPionnSigmaEvsP         = new TH2F("hPionnSigmaEvsP","",150,0,15,300,-10,5);
     hKaonnSigmaEvsP         = new TH2F("hKaonnSigmaEvsP","",150,0,15,300,-10,5);
-    hProtonnSigmaEvsP         = new TH2F("hProtonnSigmaEvsP","",150,0,15,300,-10,5);
+    hProtonnSigmaEvsP       = new TH2F("hProtonnSigmaEvsP","",150,0,15,300,-10,5);
     #endif
 
     #ifdef TRIGEFF
@@ -1098,8 +1098,11 @@ bool StMyAnalysisMaker::FillTree() {
         if (index < 0) return false;        
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
         #endif
-        if (! emctraits) continue;
-        
+        if (! emctraits)
+        {
+        	cout << "in FillTree(): emctraits is NULL" << endl;
+        	continue;
+        }
         hFillTreeElectrons->Fill(2);
         
         float etaphi[2];
@@ -1201,6 +1204,7 @@ bool StMyAnalysisMaker::FillTree() {
         nElectrons++;
     }
     if (nElectrons < 2) return false;
+    cout << "electron candidates for upsilon were found in FillTree()" << endl;
     hFillTree->Fill(6); 
     
     tEventId        = mEvent->eventId();
