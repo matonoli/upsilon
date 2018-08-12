@@ -239,7 +239,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hEventVzvsVzvpd         = new TH2F("hEventVzvsVzvpd","hEventVzvsVzvpd",100,-100,100,100,-100,100);
     hEventdVz               = new TH1F("hEventdVz","hEventdVz",120,-6,6);
     hEventVr                = new TH1F("hEventVr","hEventVr",80,-4,4);
-    hEventnTrigTowers       = new TH2F("hEventnTrigTowers","hEventnTrigTowers",200,0,200,20,0,20);
+    hEventnTrigTowers       = new TH2F("hEventnTrigTowers","hEventnTrigTowers",100,0,100,20,0,20);
     hEventnBtowEmc          = new TH2F("hEventnBtowEmc","hEventnBtowEmc",200,0,1000,200,0,1000);
     hEventnEmcTracks        = new TH2F("hEventnEmcTracks","hEventnEmcTracks",200,0,1000,200,0,1000);
     hEventnBtowTracks       = new TH2F("hEventnBtowTracks","hEventnBtowTracks",200,0,1000,200,0,1000);
