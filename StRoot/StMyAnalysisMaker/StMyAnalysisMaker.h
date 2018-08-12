@@ -183,8 +183,11 @@ private:
     TH2F* hMotherYvEta;
     TH3F* hUpsPtYPhi;
 
+    //Kuba
     TH1F* hFillTree;
     TH1F* hFillTreeElectrons;
+    TH1F* hPidTraitsIndex;
+    //;
 
     TH3F* hIMpp;
     TH3F* hIMmm;
