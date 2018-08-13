@@ -483,6 +483,7 @@ void StMyAnalysisMaker::WriteHistograms() {
 
     hFillTree->Write();
     hFillTreeElectrons->Write();
+    hPidTraitsIndex->Write();
 
     hIMpp->Write();
     hIMmm->Write();
@@ -1040,8 +1041,11 @@ bool StMyAnalysisMaker::GetBEMCdist(StPicoTrack* t, float* d) {
 //-----------------------------------------------------------------------------
 bool StMyAnalysisMaker::FillTree() {
 
+    hFillTree->Fill(0);
+
     // select event
     if (! SelectTrigger(mEvent)) return false;
+    cout << "Triggered event found in FillTree()" << endl;
     hFillTree->Fill(1);
     if ( fabs( mEvent->primaryVertex().z() ) > 100) return false;
     hFillTree->Fill(2);
@@ -1082,11 +1086,13 @@ bool StMyAnalysisMaker::FillTree() {
     if (TrigTowers.size() < 1 && TrigTowersAdcOnly.size() < 1) return false;
     hFillTree->Fill(5);
 
-    //find electrons    
+    //find electrons
+    cout << "Looking for electrons" << endl;    
     int nTracks = mPicoDst->numberOfTracks();
     int nElectrons=0;
     for (int iTrk = 0; iTrk < nTracks; iTrk++)
     {
+        hFillTreeElectrons->Fill(0);
         StPicoTrack* t = mPicoDst->track(iTrk);
         if (! t) continue;
         hFillTreeElectrons->Fill(1);
@@ -1098,12 +1104,15 @@ bool StMyAnalysisMaker::FillTree() {
         #endif
         #ifdef VERS_P17
         Short_t index = t->bemcPidTraitsIndex();
-        if (index < 0) return false;        
+        if(index < 0){
+            cout << "Negative bemcPidTraitsIndex" << endl;
+            return false;        
+        }
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
         #endif
         if (! emctraits)
         {
-        	cout << "in FillTree(): emctraits is NULL" << endl;
+        	cout << "in FillTree() emctraits is NULL" << endl;
         	continue;
         }
         hFillTreeElectrons->Fill(2);
@@ -1205,9 +1214,10 @@ bool StMyAnalysisMaker::FillTree() {
         tEleTrig[nElectrons]        = isTrigger;
 
         nElectrons++;
+        hFillTreeElectrons->Fill(16);
     }
     if (nElectrons < 2) return false;
-    cout << "electron candidates for upsilon were found in FillTree()" << endl;
+    cout << "Electron candidates for upsilon were found in FillTree()" << endl;
     hFillTree->Fill(6); 
     
     tEventId        = mEvent->eventId();
