@@ -319,6 +319,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hFillTree               = new TH1F("hFillTree","",12,-0.5,11.5);
     hFillTreeElectrons      = new TH1F("hFillTreeElectrons","",20,-0.5,19.5);
     hPidTraitsIndex         = new TH1F("hPidTraitsIndex","",100,-2,100000);
+    hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,-2,100000);
     //;
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
@@ -557,7 +558,8 @@ bool StMyAnalysisMaker::SelectEvent(StPicoEvent* eve){		// some cuts are already
 
     if (! SelectTrigger(eve)) return false;
     hEventCuts->Fill(1);
-
+    cout << "Triggered event found in SelectEvent" << endl;
+    
     //if ( fabs( eve->vzVpd() ) > 30) return false;      // NEVER USE THIS
     hEventCuts->Fill(2);
 
@@ -1099,13 +1101,16 @@ bool StMyAnalysisMaker::FillTree() {
 
         #ifndef VERS_P17
         Short_t index = t->emcPidTraitsIndex();
-        if (index < 0) return false;        
+        hPidTraitsIndexTree->Fill(index);
+        if (index < 0){
+            return false;
+        }
         StPicoEmcPidTraits* emctraits = mPicoDst->emcPidTraits(index);          //this accesses the cluster 
         #endif
         #ifdef VERS_P17
         Short_t index = t->bemcPidTraitsIndex();
+        hPidTraitsIndexTree->Fill(index);
         if(index < 0){
-            cout << "Negative bemcPidTraitsIndex" << endl;
             return false;        
         }
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
