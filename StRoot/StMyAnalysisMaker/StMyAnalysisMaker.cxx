@@ -564,7 +564,7 @@ bool StMyAnalysisMaker::SelectEvent(StPicoEvent* eve){		// some cuts are already
 
     if (! SelectTrigger(eve)) return false;
     hEventCuts->Fill(1);
-    cout << "Triggered event found in SelectEvent" << endl;
+    //cout << "Triggered event found in SelectEvent" << endl;
     
     //if ( fabs( eve->vzVpd() ) > 30) return false;      // NEVER USE THIS
     hEventCuts->Fill(2);
@@ -855,7 +855,7 @@ void StMyAnalysisMaker::DoRefMultCorr(StPicoEvent* eve) {
 bool StMyAnalysisMaker::FillEMCEFF(StPicoTrack* t, char* signs) {
 #ifdef EMCEFF
     if (signs != "LS" && signs != "US") {
-        cout << "Argument signs of FillEMCEFF must be either LS or US" << endl;
+        //cout << "Argument signs of FillEMCEFF must be either LS or US" << endl;
         return false;
     }
 
@@ -1053,7 +1053,7 @@ bool StMyAnalysisMaker::FillTree() {
 
     // select event
     if (! SelectTrigger(mEvent)) return false;
-    cout << "Triggered event found in FillTree()" << endl;
+    //cout << "Triggered event found in FillTree()" << endl;
     hFillTree->Fill(1);
     if ( fabs( mEvent->primaryVertex().z() ) > 100) return false;
     hFillTree->Fill(2);
@@ -1095,7 +1095,7 @@ bool StMyAnalysisMaker::FillTree() {
     hFillTree->Fill(5);
 
     //find electrons
-    cout << "Looking for electrons" << endl;    
+    //cout << "Looking for electrons" << endl;    
     int nTracks = mPicoDst->numberOfTracks();
     int nElectrons=0;
     for (int iTrk = 0; iTrk < nTracks; iTrk++)
@@ -1123,7 +1123,7 @@ bool StMyAnalysisMaker::FillTree() {
         #endif
         if (! emctraits)
         {
-        	cout << "in FillTree() emctraits is NULL" << endl;
+        	//cout << "in FillTree() emctraits is NULL" << endl;
         	continue;
         }
         hFillTreeElectrons->Fill(2);
@@ -1229,7 +1229,7 @@ bool StMyAnalysisMaker::FillTree() {
     }
     hFillTreeNElectrons->Fill(nElectrons);
     if (nElectrons < 2) return false;
-    cout << "Electron candidates for upsilon were found in FillTree()" << endl;
+    //cout << "Electron candidates for upsilon were found in FillTree()" << endl;
     hFillTree->Fill(6); 
     
     tEventId        = mEvent->eventId();
