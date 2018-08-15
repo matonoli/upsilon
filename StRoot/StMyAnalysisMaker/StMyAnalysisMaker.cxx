@@ -322,7 +322,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hPidTraitsIndex         = new TH1F("hPidTraitsIndex","",100,0,1000);
     hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,0,1000);
     hElectronsTrigAdcId     = new TH1F("hElectronsTrigAdcId","",100,0,100,5000,0,5000);
-)
+
     //;
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
