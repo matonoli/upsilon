@@ -15,7 +15,7 @@ void readPicoDst(Int_t nEvents= 10, const Char_t *inputFile="test.list", const C
     gROOT->LoadMacro("$STAR/StRoot/StMuDSTMaker/COMMON/macros/loadSharedLibraries.C");
     loadSharedLibraries();
     
-    gSystem->Load("StPicoEvent");
+    gSystem->Load("StPicoEvent");       //order matters?!
     gSystem->Load("StPicoDstMaker");
     gSystem->Load("StMyAnalysisMaker");
     gSystem->Load("StRefMultCorr");
