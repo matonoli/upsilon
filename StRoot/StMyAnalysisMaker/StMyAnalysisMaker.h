@@ -189,7 +189,9 @@ private:
     TH1F* hFillTreeNElectrons;
     TH1F* hPidTraitsIndex;
     TH1F* hPidTraitsIndexTree;
-    TH2F* hElectronsTrigAdcId;
+    TH2F* hElectronTrigAdcId;
+    TH2F* hTrigEtaPhi;
+    TH2F* hElectronTrigEtaPhi
     //;
 
     TH3F* hIMpp;

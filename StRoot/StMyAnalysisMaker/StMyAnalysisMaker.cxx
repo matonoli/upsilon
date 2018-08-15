@@ -321,8 +321,10 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hFillTreeNElectrons     = new TH1F("hFillTreeNElectrons","",100,0,100);
     hPidTraitsIndex         = new TH1F("hPidTraitsIndex","",100,0,1000);
     hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,0,1000);
-    hElectronsTrigAdcId     = new TH2F("hElectronsTrigAdcId","",100,0,100,5000,0,5000);
-
+    hElectronTrigAdcId      = new TH2F("hElectronTrigAdcId","",100,0,100,5000,0,5000);
+    hTrigEtaPhi             = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
+    hElectronTrigEtaPhi     = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
+    //hEventVzNPrimaries      = new TH2F("hEventVzNPrimaries","",70,-35,35,);
     //;
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
@@ -490,7 +492,9 @@ void StMyAnalysisMaker::WriteHistograms() {
     hFillTreeNElectrons->Write();
     hPidTraitsIndex->Write();
     hPidTraitsIndexTree->Write();
-    hElectronsTrigAdcId->Write();
+    hElectronTrigAdcId->Write();
+    hTrigEtaPhi->Write();
+    hElectronTrigEtaPhi->Write();
 
     hIMpp->Write();
     hIMmm->Write();
@@ -1488,6 +1492,8 @@ Int_t StMyAnalysisMaker::Make() {
     }
     //-------------------------------------------------------
 
+    int trigTowerEta = 0;
+    int trigTowerPhi = 0;
 
     // TRIG TOWER SELECTION----------------------------------
     vector<int> TrigTowers1;
@@ -1499,6 +1505,13 @@ Int_t StMyAnalysisMaker::Make() {
         #ifdef VERS_P17
         StPicoBTowHit* bhit = mPicoDst->btowHit(i);
         #endif
+
+        trigTowerEta = 0;
+        trigTowerPhi = 0;
+        geomBEMC->getEta(bhit->id(),trigTowerEta);
+        geomBEMC->getPhi(bhit->id(),trigTowerPhi);
+        hTrigEtaPhi->Fill(trigTowerEta,trigTowerPhi);
+
         if (bhit->adc()>>4 < 19) continue;
         for (int j = 0; j < nTrig; j++)
         {
@@ -1721,7 +1734,13 @@ Int_t StMyAnalysisMaker::Make() {
             	 fabs(pidE0 - bhit->energy() ) > 0.01 ) continue;
             isTrigger1 = true;
         	hElectronTowervp->Fill(t->pMom().mag(),bhit->id());
-            hElectronsTrigAdcId->Fill(bhit->adc(),bhit->id());
+            hElectronTrigAdcId->Fill(bhit->adc(),bhit->id());
+
+            trigTowerEta = 0;
+            trigTowerPhi = 0;
+            geomBEMC->getEta(bhit->id(),trigTowerEta);
+            geomBEMC->getPhi(bhit->id(),trigTowerPhi);
+            hElectronTrigEtaPhi->Fill(trigTowerEta,trigTowerPhi);
         }
         #endif
         if (isTrigger1) 
