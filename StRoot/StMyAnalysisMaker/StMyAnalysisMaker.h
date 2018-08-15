@@ -191,7 +191,7 @@ private:
     TH1F* hPidTraitsIndexTree;
     TH2F* hElectronTrigAdcId;
     TH2F* hTrigEtaPhi;
-    TH2F* hElectronTrigEtaPhi
+    TH2F* hElectronTrigEtaPhi;
     //;
 
     TH3F* hIMpp;
