@@ -1108,24 +1108,16 @@ bool StMyAnalysisMaker::FillTree() {
         #ifndef VERS_P17
         Short_t index = t->emcPidTraitsIndex();
         hPidTraitsIndexTree->Fill(index);
-        if (index < 0){
-            continue;
-        }
+        if (index < 0) continue;
         StPicoEmcPidTraits* emctraits = mPicoDst->emcPidTraits(index);          //this accesses the cluster 
         #endif
         #ifdef VERS_P17
         Short_t index = t->bemcPidTraitsIndex();
         hPidTraitsIndexTree->Fill(index);
-        if(index < 0){
-            continue;        
-        }
+        if (index < 0) continue;
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
         #endif
-        if (! emctraits)
-        {
-        	cout << "in FillTree() emctraits is NULL" << endl;
-        	continue;
-        }
+        if (! emctraits) continue;
         hFillTreeElectrons->Fill(2);
         
         float etaphi[2];
