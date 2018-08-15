@@ -1492,8 +1492,8 @@ Int_t StMyAnalysisMaker::Make() {
     }
     //-------------------------------------------------------
 
-    int trigTowerEta = 0;
-    int trigTowerPhi = 0;
+    float trigTowerEta = 0;
+    float trigTowerPhi = 0;
 
     // TRIG TOWER SELECTION----------------------------------
     vector<int> TrigTowers1;
