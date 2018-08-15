@@ -1,0 +1,10 @@
+# xyscan format data
+# Date:
+# Scanned by:
+# Source:
+# Comment:
+# Format: x y -dx +dx -dy +dy
+79.776 16.533 0 0 8.41931 8.41931
+201.2565 18.7206 0 0 13.4159 13.4159
+324.662 21.1306 0 0 11.0886 11.0886
+# EoF
