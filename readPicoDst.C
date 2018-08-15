@@ -33,7 +33,7 @@ void readPicoDst(Int_t nEvents= 10, const Char_t *inputFile="test.list", const C
     if(nEvents>total) nEvents = total;
     
     for (Int_t i=0; i<nEvents; i++){
-        if(i%100000==0)
+        if(i%1000==0)
             cout << "Working on eventNumber " << i << endl;
         
         chain->Clear();

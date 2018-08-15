@@ -239,10 +239,10 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hEventVzvsVzvpd         = new TH2F("hEventVzvsVzvpd","hEventVzvsVzvpd",100,-100,100,100,-100,100);
     hEventdVz               = new TH1F("hEventdVz","hEventdVz",120,-6,6);
     hEventVr                = new TH1F("hEventVr","hEventVr",80,-4,4);
-    hEventnTrigTowers       = new TH2F("hEventnTrigTowers","hEventnTrigTowers",20,0,20,20,0,20);
-    hEventnBtowEmc          = new TH2F("hEventnBtowEmc","hEventnBtowEmc",200,0,1000,200,0,1000);
+    hEventnTrigTowers       = new TH2F("hEventnTrigTowers","hEventnTrigTowers",200,0,200,20,0,20);
+    hEventnBtowEmc          = new TH2F("hEventnBtowEmc","hEventnBtowEmc",480,0,4800,400,0,2000);
     hEventnEmcTracks        = new TH2F("hEventnEmcTracks","hEventnEmcTracks",200,0,1000,200,0,1000);
-    hEventnBtowTracks       = new TH2F("hEventnBtowTracks","hEventnBtowTracks",200,0,1000,200,0,1000);
+    hEventnBtowTracks       = new TH2F("hEventnBtowTracks","hEventnBtowTracks",480,0,4800,400,0,2000); //increased range
     hEventAllTracks         = new TH1F("hEventAllTracks","hEventAllTracks",20,0,20);
     hEventTriggerTracks     = new TH1F("hEventTriggerTracks","",10,0,10);
 
@@ -315,6 +315,16 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hMotherYvEta            = new TH2F("hMotherYvEta","",160,-1.3,1.3,160,-1.3,1.3);
     hUpsPtYPhi              = new TH3F("hUpsPtYPhi","",200,0,20,160,-1.3,1.3,100,-3.2,3.2);
 
+    //Kuba
+    hFillTree               = new TH1F("hFillTree","",12,-0.5,11.5);
+    hFillTreeElectrons      = new TH1F("hFillTreeElectrons","",20,-0.5,19.5);
+    hFillTreeNElectrons     = new TH1F("hFillTreeNElectrons","",100,0,100);
+    hPidTraitsIndex         = new TH1F("hPidTraitsIndex","",100,0,1000);
+    hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,0,1000);
+    hElectronsTrigAdcId     = new TH2F("hElectronsTrigAdcId","",100,0,100,5000,0,5000);
+
+    //;
+
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
     hIMpp->Sumw2();
     hIMmm       		    = new TH3F("hIMmm","",200,0,20,10,1,21,11,-1.5,9.5);
@@ -340,7 +350,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hElectrondEdxvsP        = new TH3F("hElectrondEdxvsP","",150,0,15,200,1,5,10,0,10);
     hPionnSigmaEvsP         = new TH2F("hPionnSigmaEvsP","",150,0,15,300,-10,5);
     hKaonnSigmaEvsP         = new TH2F("hKaonnSigmaEvsP","",150,0,15,300,-10,5);
-    hProtonnSigmaEvsP         = new TH2F("hProtonnSigmaEvsP","",150,0,15,300,-10,5);
+    hProtonnSigmaEvsP       = new TH2F("hProtonnSigmaEvsP","",150,0,15,300,-10,5);
     #endif
 
     #ifdef TRIGEFF
@@ -475,6 +485,13 @@ void StMyAnalysisMaker::WriteHistograms() {
     hMotherYvEta->Write();
     hUpsPtYPhi->Write();
 
+    hFillTree->Write();
+    hFillTreeElectrons->Write();
+    hFillTreeNElectrons->Write();
+    hPidTraitsIndex->Write();
+    hPidTraitsIndexTree->Write();
+    hElectronsTrigAdcId->Write();
+
     hIMpp->Write();
     hIMmm->Write();
     hIMpm->Write();
@@ -547,7 +564,8 @@ bool StMyAnalysisMaker::SelectEvent(StPicoEvent* eve){		// some cuts are already
 
     if (! SelectTrigger(eve)) return false;
     hEventCuts->Fill(1);
-
+    cout << "Triggered event found in SelectEvent" << endl;
+    
     //if ( fabs( eve->vzVpd() ) > 30) return false;      // NEVER USE THIS
     hEventCuts->Fill(2);
 
@@ -1031,10 +1049,16 @@ bool StMyAnalysisMaker::GetBEMCdist(StPicoTrack* t, float* d) {
 //-----------------------------------------------------------------------------
 bool StMyAnalysisMaker::FillTree() {
 
+    hFillTree->Fill(0);
+
     // select event
     if (! SelectTrigger(mEvent)) return false;
+    cout << "Triggered event found in FillTree()" << endl;
+    hFillTree->Fill(1);
     if ( fabs( mEvent->primaryVertex().z() ) > 100) return false;
+    hFillTree->Fill(2);
     if ( fabs( mEvent->primaryVertex().z() - mEvent->vzVpd() ) > 4) return false;
+    hFillTree->Fill(3);
 
     #ifndef VERS_P17
     int nEmcPids = mPicoDst->numberOfEmcPidTraits();
@@ -1044,6 +1068,7 @@ bool StMyAnalysisMaker::FillTree() {
     #endif
 
     if ( nEmcPids < 1) return false;
+    hFillTree->Fill(4);
 
     // find triggered tower
     vector<int> TrigTowers;
@@ -1067,25 +1092,41 @@ bool StMyAnalysisMaker::FillTree() {
         }
     }
     if (TrigTowers.size() < 1 && TrigTowersAdcOnly.size() < 1) return false;
+    hFillTree->Fill(5);
 
-    //find electrons    
+    //find electrons
+    cout << "Looking for electrons" << endl;    
     int nTracks = mPicoDst->numberOfTracks();
     int nElectrons=0;
     for (int iTrk = 0; iTrk < nTracks; iTrk++)
     {
+        hFillTreeElectrons->Fill(0);
         StPicoTrack* t = mPicoDst->track(iTrk);
         if (! t) continue;
+        hFillTreeElectrons->Fill(1);
+
         #ifndef VERS_P17
         Short_t index = t->emcPidTraitsIndex();
-        if (index < 0) return false;        
+        hPidTraitsIndexTree->Fill(index);
+        if (index < 0){
+            continue;
+        }
         StPicoEmcPidTraits* emctraits = mPicoDst->emcPidTraits(index);          //this accesses the cluster 
         #endif
         #ifdef VERS_P17
         Short_t index = t->bemcPidTraitsIndex();
-        if (index < 0) return false;        
+        hPidTraitsIndexTree->Fill(index);
+        if(index < 0){
+            continue;        
+        }
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
         #endif
-        if (! emctraits) continue;
+        if (! emctraits)
+        {
+        	cout << "in FillTree() emctraits is NULL" << endl;
+        	continue;
+        }
+        hFillTreeElectrons->Fill(2);
         
         float etaphi[2];
         etaphi[0]=999, etaphi[1]=999;
@@ -1109,18 +1150,31 @@ bool StMyAnalysisMaker::FillTree() {
 
 
         if (t->nHitsFit() < 10)             continue;
+        hFillTreeElectrons->Fill(3);
         if ((float)t->nHitsFit()/t->nHitsMax() < 0.52) continue;
+        hFillTreeElectrons->Fill(4);
         if (t->nHitsDedx() < 10)            continue;
+        hFillTreeElectrons->Fill(5);
         if (t->pMom().mag() == 0)           continue; // ->isPrimary()
+        hFillTreeElectrons->Fill(6);
         if (t->nSigmaElectron() < -2)       continue;
+        hFillTreeElectrons->Fill(7);
         if (t->nSigmaElectron() > 3.5)      continue;
+        hFillTreeElectrons->Fill(8);
         if (fabs(t->pMom().pseudoRapidity() ) > 1.1) continue;
+        hFillTreeElectrons->Fill(9);
         if (dca > 3)                        continue;
+        hFillTreeElectrons->Fill(10);
         if (pidE/t->pMom().mag() < 0.2) continue;
+        hFillTreeElectrons->Fill(11);
         if (pidE/t->pMom().mag() > 1.9) continue;
+        hFillTreeElectrons->Fill(12);
         if (pidE < 0.1)           continue;
+        hFillTreeElectrons->Fill(13);
         if (sqrt(etaphi[0]*etaphi[0]+etaphi[1]*etaphi[1]) > 0.06) continue;
+        hFillTreeElectrons->Fill(14);
         if (t->pMom().mag() < 2.0)          continue;
+        hFillTreeElectrons->Fill(15);
     
         //is trigger?
         int isTrigger = 0;
@@ -1135,6 +1189,7 @@ bool StMyAnalysisMaker::FillTree() {
             if ( fabs(pidE1 - bhit->energy() ) > 0.01 &&
                  fabs(pidE0 - bhit->energy() ) > 0.01 ) continue;
             isTrigger = 1;  }
+
         for (int iTrg = 0; iTrg < TrigTowersAdcOnly.size(); iTrg++)
         {
             #ifndef VERS_P17
@@ -1170,8 +1225,12 @@ bool StMyAnalysisMaker::FillTree() {
         tEleTrig[nElectrons]        = isTrigger;
 
         nElectrons++;
+        hFillTreeElectrons->Fill(16);
     }
-    if (nElectrons < 2) return false; 
+    hFillTreeNElectrons->Fill(nElectrons);
+    if (nElectrons < 2) return false;
+    cout << "Electron candidates for upsilon were found in FillTree()" << endl;
+    hFillTree->Fill(6); 
     
     tEventId        = mEvent->eventId();
     tEventRunId     = mEvent->runId();
@@ -1233,7 +1292,11 @@ Int_t StMyAnalysisMaker::Make() {
     mEmcPos = new StEmcPosition;
 
     #ifdef FULLTREE
-    if (FillTree()) upsTree->Fill();
+    if (FillTree()){
+        upsTree->Fill();
+        cout << "Tree was filled -- FillTree() returned true" << endl;
+        hFillTree->Fill(7);
+    }
     #endif
 
     // SELECT GOOD EVENT INCLUDING TRIGGER
@@ -1493,6 +1556,7 @@ Int_t StMyAnalysisMaker::Make() {
         #ifndef EMCEFF
         #ifndef VERS_P17
         Short_t index = t->emcPidTraitsIndex();
+        hPidTraitsIndex->Fill(index);
         if (index < 0) continue;        
         StPicoEmcPidTraits* emctraits = mPicoDst->emcPidTraits(index);          //this accesses the cluster
         Float_t pidE = emctraits->e();
@@ -1504,6 +1568,7 @@ Int_t StMyAnalysisMaker::Make() {
         #endif
         #ifdef VERS_P17
         Short_t index = t->bemcPidTraitsIndex();
+        hPidTraitsIndex->Fill(index);
         if (index < 0) continue;        
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
         Float_t pidE = emctraits->bemcE();
@@ -1656,6 +1721,7 @@ Int_t StMyAnalysisMaker::Make() {
             	 fabs(pidE0 - bhit->energy() ) > 0.01 ) continue;
             isTrigger1 = true;
         	hElectronTowervp->Fill(t->pMom().mag(),bhit->id());
+            hElectronsTrigAdcId->Fill(bhit->adc(),bhit->id());
         }
         #endif
         if (isTrigger1) 
