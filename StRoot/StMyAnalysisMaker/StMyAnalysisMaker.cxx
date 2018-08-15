@@ -239,8 +239,8 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hEventVzvsVzvpd         = new TH2F("hEventVzvsVzvpd","hEventVzvsVzvpd",100,-100,100,100,-100,100);
     hEventdVz               = new TH1F("hEventdVz","hEventdVz",120,-6,6);
     hEventVr                = new TH1F("hEventVr","hEventVr",80,-4,4);
-    hEventnTrigTowers       = new TH2F("hEventnTrigTowers","hEventnTrigTowers",100,0,100,20,0,20);
-    hEventnBtowEmc          = new TH2F("hEventnBtowEmc","hEventnBtowEmc",200,0,1000,200,0,1000);
+    hEventnTrigTowers       = new TH2F("hEventnTrigTowers","hEventnTrigTowers",200,0,200,20,0,20);
+    hEventnBtowEmc          = new TH2F("hEventnBtowEmc","hEventnBtowEmc",480,0,4800,400,0,2000);
     hEventnEmcTracks        = new TH2F("hEventnEmcTracks","hEventnEmcTracks",200,0,1000,200,0,1000);
     hEventnBtowTracks       = new TH2F("hEventnBtowTracks","hEventnBtowTracks",480,0,4800,400,0,2000); //increased range
     hEventAllTracks         = new TH1F("hEventAllTracks","hEventAllTracks",20,0,20);
@@ -321,7 +321,10 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hFillTreeNElectrons     = new TH1F("hFillTreeNElectrons","",100,0,100);
     hPidTraitsIndex         = new TH1F("hPidTraitsIndex","",100,0,1000);
     hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,0,1000);
-
+    hElectronTrigAdcId      = new TH2F("hElectronTrigAdcId","",100,0,100,5000,0,5000);
+    hTrigEtaPhi             = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
+    hElectronTrigEtaPhi     = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
+    //hEventVzNPrimaries      = new TH2F("hEventVzNPrimaries","",70,-35,35,);
     //;
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
@@ -489,6 +492,9 @@ void StMyAnalysisMaker::WriteHistograms() {
     hFillTreeNElectrons->Write();
     hPidTraitsIndex->Write();
     hPidTraitsIndexTree->Write();
+    hElectronTrigAdcId->Write();
+    hTrigEtaPhi->Write();
+    hElectronTrigEtaPhi->Write();
 
     hIMpp->Write();
     hIMmm->Write();
@@ -562,7 +568,7 @@ bool StMyAnalysisMaker::SelectEvent(StPicoEvent* eve){		// some cuts are already
 
     if (! SelectTrigger(eve)) return false;
     hEventCuts->Fill(1);
-    cout << "Triggered event found in SelectEvent" << endl;
+    //cout << "Triggered event found in SelectEvent" << endl;
     
     //if ( fabs( eve->vzVpd() ) > 30) return false;      // NEVER USE THIS
     hEventCuts->Fill(2);
@@ -853,7 +859,7 @@ void StMyAnalysisMaker::DoRefMultCorr(StPicoEvent* eve) {
 bool StMyAnalysisMaker::FillEMCEFF(StPicoTrack* t, char* signs) {
 #ifdef EMCEFF
     if (signs != "LS" && signs != "US") {
-        cout << "Argument signs of FillEMCEFF must be either LS or US" << endl;
+        //cout << "Argument signs of FillEMCEFF must be either LS or US" << endl;
         return false;
     }
 
@@ -1051,7 +1057,7 @@ bool StMyAnalysisMaker::FillTree() {
 
     // select event
     if (! SelectTrigger(mEvent)) return false;
-    cout << "Triggered event found in FillTree()" << endl;
+    //cout << "Triggered event found in FillTree()" << endl;
     hFillTree->Fill(1);
     if ( fabs( mEvent->primaryVertex().z() ) > 100) return false;
     hFillTree->Fill(2);
@@ -1093,7 +1099,7 @@ bool StMyAnalysisMaker::FillTree() {
     hFillTree->Fill(5);
 
     //find electrons
-    cout << "Looking for electrons" << endl;    
+    //cout << "Looking for electrons" << endl;    
     int nTracks = mPicoDst->numberOfTracks();
     int nElectrons=0;
     for (int iTrk = 0; iTrk < nTracks; iTrk++)
@@ -1107,7 +1113,7 @@ bool StMyAnalysisMaker::FillTree() {
         Short_t index = t->emcPidTraitsIndex();
         hPidTraitsIndexTree->Fill(index);
         if (index < 0){
-            return false;
+            continue;
         }
         StPicoEmcPidTraits* emctraits = mPicoDst->emcPidTraits(index);          //this accesses the cluster 
         #endif
@@ -1115,13 +1121,13 @@ bool StMyAnalysisMaker::FillTree() {
         Short_t index = t->bemcPidTraitsIndex();
         hPidTraitsIndexTree->Fill(index);
         if(index < 0){
-            return false;        
+            continue;        
         }
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
         #endif
         if (! emctraits)
         {
-        	cout << "in FillTree() emctraits is NULL" << endl;
+        	//cout << "in FillTree() emctraits is NULL" << endl;
         	continue;
         }
         hFillTreeElectrons->Fill(2);
@@ -1227,7 +1233,7 @@ bool StMyAnalysisMaker::FillTree() {
     }
     hFillTreeNElectrons->Fill(nElectrons);
     if (nElectrons < 2) return false;
-    cout << "Electron candidates for upsilon were found in FillTree()" << endl;
+    //cout << "Electron candidates for upsilon were found in FillTree()" << endl;
     hFillTree->Fill(6); 
     
     tEventId        = mEvent->eventId();
@@ -1486,6 +1492,8 @@ Int_t StMyAnalysisMaker::Make() {
     }
     //-------------------------------------------------------
 
+    float trigTowerEta = 0;
+    float trigTowerPhi = 0;
 
     // TRIG TOWER SELECTION----------------------------------
     vector<int> TrigTowers1;
@@ -1497,6 +1505,13 @@ Int_t StMyAnalysisMaker::Make() {
         #ifdef VERS_P17
         StPicoBTowHit* bhit = mPicoDst->btowHit(i);
         #endif
+
+        trigTowerEta = 0;
+        trigTowerPhi = 0;
+        geomBEMC->getEta(bhit->id(),trigTowerEta);
+        geomBEMC->getPhi(bhit->id(),trigTowerPhi);
+        hTrigEtaPhi->Fill(trigTowerEta,trigTowerPhi);
+
         if (bhit->adc()>>4 < 19) continue;
         for (int j = 0; j < nTrig; j++)
         {
@@ -1719,6 +1734,13 @@ Int_t StMyAnalysisMaker::Make() {
             	 fabs(pidE0 - bhit->energy() ) > 0.01 ) continue;
             isTrigger1 = true;
         	hElectronTowervp->Fill(t->pMom().mag(),bhit->id());
+            hElectronTrigAdcId->Fill(bhit->adc(),bhit->id());
+
+            trigTowerEta = 0;
+            trigTowerPhi = 0;
+            geomBEMC->getEta(bhit->id(),trigTowerEta);
+            geomBEMC->getPhi(bhit->id(),trigTowerPhi);
+            hElectronTrigEtaPhi->Fill(trigTowerEta,trigTowerPhi);
         }
         #endif
         if (isTrigger1) 
