@@ -186,7 +186,9 @@ private:
     //Kuba
     TH1F* hFillTree;
     TH1F* hFillTreeElectrons;
+    TH1F* hFillTreeNElectrons;
     TH1F* hPidTraitsIndex;
+    TH1F* hPidTraitsIndexTree;
     //;
 
     TH3F* hIMpp;
