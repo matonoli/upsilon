@@ -1524,7 +1524,7 @@ Int_t StMyAnalysisMaker::Make() {
         hTracknSigmaPionvsp->Fill(t->pMom().mag(),t->nSigmaPion());
         hTrackEtaPhiPtG->Fill(t->gPt(),t->gMom(pvtx, bfield).pseudoRapidity(),t->gMom(pvtx, bfield).phi());
         hTrackEtaPhiPtP->Fill(t->pMom().perp(),t->pMom().pseudoRapidity(),t->pMom().phi());
-        //hTrackDca->Fill(dca);
+        hTrackDca->Fill(dca);
         hTracknHitsRatio->Fill((float)t->nHitsFit()/t->nHitsMax());
         hTracknHitsFit->Fill(t->nHitsFit());
 
