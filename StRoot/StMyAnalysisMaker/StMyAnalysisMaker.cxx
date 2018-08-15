@@ -490,6 +490,7 @@ void StMyAnalysisMaker::WriteHistograms() {
     hFillTreeNElectrons->Write();
     hPidTraitsIndex->Write();
     hPidTraitsIndexTree->Write();
+    hElectronsTrigAdcId->Write();
 
     hIMpp->Write();
     hIMmm->Write();
