@@ -242,7 +242,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hEventnTrigTowers       = new TH2F("hEventnTrigTowers","hEventnTrigTowers",100,0,100,20,0,20);
     hEventnBtowEmc          = new TH2F("hEventnBtowEmc","hEventnBtowEmc",200,0,1000,200,0,1000);
     hEventnEmcTracks        = new TH2F("hEventnEmcTracks","hEventnEmcTracks",200,0,1000,200,0,1000);
-    hEventnBtowTracks       = new TH2F("hEventnBtowTracks","hEventnBtowTracks",200,0,1000,200,0,1000);
+    hEventnBtowTracks       = new TH2F("hEventnBtowTracks","hEventnBtowTracks",480,0,4800,400,0,2000); //increased range
     hEventAllTracks         = new TH1F("hEventAllTracks","hEventAllTracks",20,0,20);
     hEventTriggerTracks     = new TH1F("hEventTriggerTracks","",10,0,10);
 
@@ -318,8 +318,10 @@ void StMyAnalysisMaker::DeclareHistograms() {
     //Kuba
     hFillTree               = new TH1F("hFillTree","",12,-0.5,11.5);
     hFillTreeElectrons      = new TH1F("hFillTreeElectrons","",20,-0.5,19.5);
-    hPidTraitsIndex         = new TH1F("hPidTraitsIndex","",100,-2,100000);
-    hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,-2,100000);
+    hFillTreeNElectrons     = new TH1F("hFillTreeNElectrons","",100,0,100);
+    hPidTraitsIndex         = new TH1F("hPidTraitsIndex","",100,0,1000);
+    hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,0,1000);
+
     //;
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
@@ -484,7 +486,9 @@ void StMyAnalysisMaker::WriteHistograms() {
 
     hFillTree->Write();
     hFillTreeElectrons->Write();
+    hFillTreeNElectrons->Write();
     hPidTraitsIndex->Write();
+    hPidTraitsIndexTree->Write();
 
     hIMpp->Write();
     hIMmm->Write();
@@ -1221,6 +1225,7 @@ bool StMyAnalysisMaker::FillTree() {
         nElectrons++;
         hFillTreeElectrons->Fill(16);
     }
+    hFillTreeNElectrons->Fill(nElectrons);
     if (nElectrons < 2) return false;
     cout << "Electron candidates for upsilon were found in FillTree()" << endl;
     hFillTree->Fill(6); 
