@@ -239,8 +239,8 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hEventVzvsVzvpd         = new TH2F("hEventVzvsVzvpd","hEventVzvsVzvpd",100,-100,100,100,-100,100);
     hEventdVz               = new TH1F("hEventdVz","hEventdVz",120,-6,6);
     hEventVr                = new TH1F("hEventVr","hEventVr",80,-4,4);
-    hEventnTrigTowers       = new TH2F("hEventnTrigTowers","hEventnTrigTowers",100,0,100,20,0,20);
-    hEventnBtowEmc          = new TH2F("hEventnBtowEmc","hEventnBtowEmc",200,0,1000,200,0,1000);
+    hEventnTrigTowers       = new TH2F("hEventnTrigTowers","hEventnTrigTowers",200,0,200,20,0,20);
+    hEventnBtowEmc          = new TH2F("hEventnBtowEmc","hEventnBtowEmc",480,0,4800,400,0,2000);
     hEventnEmcTracks        = new TH2F("hEventnEmcTracks","hEventnEmcTracks",200,0,1000,200,0,1000);
     hEventnBtowTracks       = new TH2F("hEventnBtowTracks","hEventnBtowTracks",480,0,4800,400,0,2000); //increased range
     hEventAllTracks         = new TH1F("hEventAllTracks","hEventAllTracks",20,0,20);
@@ -321,7 +321,8 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hFillTreeNElectrons     = new TH1F("hFillTreeNElectrons","",100,0,100);
     hPidTraitsIndex         = new TH1F("hPidTraitsIndex","",100,0,1000);
     hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,0,1000);
-
+    hElectronsTrigAdcId     = new TH1F("hElectronsTrigAdcId","",100,0,100,5000,0,5000);
+)
     //;
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
@@ -1107,7 +1108,7 @@ bool StMyAnalysisMaker::FillTree() {
         Short_t index = t->emcPidTraitsIndex();
         hPidTraitsIndexTree->Fill(index);
         if (index < 0){
-            return false;
+            continue;
         }
         StPicoEmcPidTraits* emctraits = mPicoDst->emcPidTraits(index);          //this accesses the cluster 
         #endif
@@ -1115,7 +1116,7 @@ bool StMyAnalysisMaker::FillTree() {
         Short_t index = t->bemcPidTraitsIndex();
         hPidTraitsIndexTree->Fill(index);
         if(index < 0){
-            return false;        
+            continue;        
         }
         StPicoBEmcPidTraits* emctraits = mPicoDst->bemcPidTraits(index);          //this accesses the cluster 
         #endif
@@ -1719,6 +1720,7 @@ Int_t StMyAnalysisMaker::Make() {
             	 fabs(pidE0 - bhit->energy() ) > 0.01 ) continue;
             isTrigger1 = true;
         	hElectronTowervp->Fill(t->pMom().mag(),bhit->id());
+            hElectronsTrigAdcId->Fill(bhit->adc(),bhit->id());
         }
         #endif
         if (isTrigger1) 
