@@ -325,6 +325,10 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hTrigEtaPhi             = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
     hElectronTrigEtaPhi     = new TH2F("hElectronTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
     hTrackEtaPhiPtPrimOnly  = new TH3F("hTrackEtaPhiPtPrimOnly","hTrackEtaPhiPtP",450,0,15,160,-1.3,1.3,100,-3.2,3.2);
+    hTrigElectronEvsP       = new TH2F("hTrigElectronEvsP","",450,0,15,450,0,15);
+    hTrigElectronE0vsP      = new TH2F("hTrigElectronE0vsP","",450,0,15,450,0,15);
+    hTrigElectronGlEvsP     = new TH2F("hTrigElectronGlEvsP","",450,0,15,450,0,15);
+    hTrigElectronGlE0vsP    = new TH2F("hTrigElectronGlE0vsP","",450,0,15,450,0,15);
     //;
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
@@ -496,6 +500,8 @@ void StMyAnalysisMaker::WriteHistograms() {
     hTrigEtaPhi->Write();
     hElectronTrigEtaPhi->Write();
     hTrackEtaPhiPtPrimOnly->Write();
+    hTrigElectronEvsP->Write();
+    hTrigElectronE0vsP->Write();
 
     hIMpp->Write();
     hIMmm->Write();
@@ -1750,6 +1756,10 @@ Int_t StMyAnalysisMaker::Make() {
         if (isTrigger1) 
         {
             TriggerTracks1.push_back(i);
+            hTrigElectronEvsP->Fill(t->pMom().mag(),pidE);
+            hTrigElectronE0vsP->Fill(t->pMom().mag(),pidE0);
+            hTrigElectronGlEvsP->Fill(t->gMom(pvtx, bfield).mag(),pidE);
+            hTrigElectronGlE0vsP->Fill(t->gMom(pvtx, bfield).mag(),pidE);
             hTracksSelection->Fill(17);
         }   
     
