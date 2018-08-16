@@ -502,6 +502,8 @@ void StMyAnalysisMaker::WriteHistograms() {
     hTrackEtaPhiPtPrimOnly->Write();
     hTrigElectronEvsP->Write();
     hTrigElectronE0vsP->Write();
+    hTrigElectronGlEvsP->Write();
+    hTrigElectronGlE0vsP->Write();
 
     hIMpp->Write();
     hIMmm->Write();
