@@ -250,7 +250,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hEventNPrimariesCent    = new TH2F("hEventNPrimariesCent","",10,0,10,2000,0,2000);
 
     hEventVzvsNPrim         = new TH3F("hEventVzvsNPrim","",400,-50,50,2000,0,2000,10,0,10);
-    hEventVzvsNPrimHard     = new TH3F("hEventVzvsNPrimHard","",400,-50,50,2000,0,2000,10,0,10);
+    hEventVzvsNPrimHard     = new TH3F("hEventVzvsNPrimHard","",400,-50,50,2000,0,200,10,0,10);
     hEta                    = new TH1F("hEta","",300,-3,3);
 
     hCorrgrefMult           = new TH2F("hCorrgrefMult","", 400,0,800,400,0,800);
@@ -260,7 +260,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hCorrWeight				= new TH1F("hCorrWeight","",100,0.9,1.1);
 
     hTrigFlag               = new TH1F("hTrigFlag","hTrigFlag",20,0,20);
-    hTrigAdcId              = new TH2F("hTrigAdcId","hTrigAdcId",100,0,100,5000,0,5000);
+    hTrigAdcId              = new TH2F("hTrigAdcId","hTrigAdcId",200,0,1000,5000,0,5000); //changed x range and binning
 
     hBtowAdcId              = new TH2F("hBtowAdcId","hBtowAdcId",200,0,1000,5000,0,5000);
 
@@ -321,10 +321,10 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hFillTreeNElectrons     = new TH1F("hFillTreeNElectrons","",100,0,100);
     hPidTraitsIndex         = new TH1F("hPidTraitsIndex","",100,0,1000);
     hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,0,1000);
-    hElectronTrigAdcId      = new TH2F("hElectronTrigAdcId","",100,0,100,5000,0,5000);
+    hElectronTrigAdcId      = new TH2F("hElectronTrigAdcId","",200,0,1000,5000,0,5000);
     hTrigEtaPhi             = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
     hElectronTrigEtaPhi     = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
-    //hEventVzNPrimaries      = new TH2F("hEventVzNPrimaries","",70,-35,35,);
+    hTrackEtaPhiPtPrimOnly  = new TH3F("hTrackEtaPhiPtPrimOnly","hTrackEtaPhiPtP",450,0,15,160,-1.3,1.3,100,-3.2,3.2);
     //;
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
@@ -495,6 +495,7 @@ void StMyAnalysisMaker::WriteHistograms() {
     hElectronTrigAdcId->Write();
     hTrigEtaPhi->Write();
     hElectronTrigEtaPhi->Write();
+    hTrackEtaPhiPtPrimOnly->Write();
 
     hIMpp->Write();
     hIMmm->Write();
@@ -1298,7 +1299,7 @@ Int_t StMyAnalysisMaker::Make() {
     #ifdef FULLTREE
     if (FillTree()){
         upsTree->Fill();
-        cout << "Tree was filled -- FillTree() returned true" << endl;
+        //cout << "Tree was filled -- FillTree() returned true" << endl;
         hFillTree->Fill(7);
     }
     #endif
@@ -1602,6 +1603,9 @@ Int_t StMyAnalysisMaker::Make() {
         hTracknSigmaPionvsp->Fill(t->pMom().mag(),t->nSigmaPion());
         hTrackEtaPhiPtG->Fill(t->gPt(),t->gMom(pvtx, bfield).pseudoRapidity(),t->gMom(pvtx, bfield).phi());
         hTrackEtaPhiPtP->Fill(t->pMom().perp(),t->pMom().pseudoRapidity(),t->pMom().phi());
+        if(t->pMom().mag()>0){
+        hTrackEtaPhiPtPrimOnly->Fill(t->pMom().perp(),t->pMom().pseudoRapidity(),t->pMom().phi());
+        }
         //hTrackDca->Fill(dca);
         hTracknHitsRatio->Fill((float)t->nHitsFit()/t->nHitsMax());
         hTracknHitsFit->Fill(t->nHitsFit());
