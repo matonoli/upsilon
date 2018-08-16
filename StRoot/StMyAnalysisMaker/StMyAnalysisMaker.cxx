@@ -323,7 +323,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,0,1000);
     hElectronTrigAdcId      = new TH2F("hElectronTrigAdcId","",200,0,1000,5000,0,5000);
     hTrigEtaPhi             = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
-    hElectronTrigEtaPhi     = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
+    hElectronTrigEtaPhi     = new TH2F("hElectronTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
     hTrackEtaPhiPtPrimOnly  = new TH3F("hTrackEtaPhiPtPrimOnly","hTrackEtaPhiPtP",450,0,15,160,-1.3,1.3,100,-3.2,3.2);
     //;
 
