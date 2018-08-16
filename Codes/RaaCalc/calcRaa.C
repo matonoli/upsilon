@@ -189,7 +189,7 @@ void calcRaa() {
 	yield_STAR_2S_3S_int->SetMarkerSize(1.2);
 
 	//----------------------------------------------
-
+/*
 	gSystem->cd("worldData");
 
 
@@ -203,7 +203,7 @@ void calcRaa() {
 	gSystem->cd("models");
 
 
-	gSystem->cd("../");
+	gSystem->cd("../");*/
 
 
 	//----------------------------------------------
