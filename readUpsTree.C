@@ -14,7 +14,7 @@ void readUpsTree(const Char_t *inputFile="test.root", Int_t cutSet = 0) {
 	TFile* fin = new TFile(inputFile,"READ");
 	//TFile *fsim = new TFile("simBB_0419_2eq6.root","READ");
 	//TFile *fsim = new TFile("simBB_0405_2e.root","READ");
-	TFile *fsim = new TFile("simBB_0505_2e_m.root","READ");
+	TFile *fsim = new TFile("../upstree/simBB_0505_2e_m.root","READ");
 	//TFile *fsim = new TFile("simBB_0405_2eq20.root","READ");
 	//TFile *fsim = new TFile("simBB_0420_DYq6.root","READ");
 	//TFile *fsim = new TFile("simBB_0409_2eq15.root","READ");

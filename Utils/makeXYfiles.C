@@ -13,7 +13,7 @@ void makeXYfiles(const Char_t *inputFile="yields.txt", Int_t option = 0) {
     	double err1S[4];
     	double yield23S[4];
     	double err23S[4];
-		lc = 0;
+		string t; int lc = 0;
 		while ( !fyields.eof() && lc < 16 )	{
    			getline(fyields,t);
    			if (lc%4==0) yield1S[lc/4] = atof(t.c_str());
@@ -47,9 +47,14 @@ void makeXYfiles(const Char_t *inputFile="yields.txt", Int_t option = 0) {
 
    	//produing XY files now
    	p1Sint->SetName("yield_1S_int");
-   	p1Sint->SetName("yield_1S");
-   	p1Sint->SetName("yield_2S3S_int");
-   	p1Sint->SetName("yield_2S3S");
+   	p1S->SetName("yield_1S");
+   	p23Sint->SetName("yield_2S3S_int");
+   	p23S->SetName("yield_2S3S");
+
+   	WriteGraph(p1Sint);
+   	WriteGraph(p1S);
+   	WriteGraph(p23Sint);
+   	WriteGraph(p23S);
    	
    	}
 
