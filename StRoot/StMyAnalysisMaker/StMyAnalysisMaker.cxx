@@ -260,7 +260,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hCorrWeight				= new TH1F("hCorrWeight","",100,0.9,1.1);
 
     hTrigFlag               = new TH1F("hTrigFlag","hTrigFlag",20,0,20);
-    hTrigAdcId              = new TH2F("hTrigAdcId","hTrigAdcId",100,0,100,5000,0,5000);
+    hTrigAdcId              = new TH2F("hTrigAdcId","hTrigAdcId",200,0,1000,5000,0,5000); //changed x range and binning
 
     hBtowAdcId              = new TH2F("hBtowAdcId","hBtowAdcId",200,0,1000,5000,0,5000);
 
@@ -321,7 +321,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hFillTreeNElectrons     = new TH1F("hFillTreeNElectrons","",100,0,100);
     hPidTraitsIndex         = new TH1F("hPidTraitsIndex","",100,0,1000);
     hPidTraitsIndexTree     = new TH1F("hPidTraitsIndexTree","",100,0,1000);
-    hElectronTrigAdcId      = new TH2F("hElectronTrigAdcId","",100,0,100,5000,0,5000);
+    hElectronTrigAdcId      = new TH2F("hElectronTrigAdcId","",200,0,1000,5000,0,5000);
     hTrigEtaPhi             = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
     hElectronTrigEtaPhi     = new TH2F("hTrigEtaPhi","",300,-1.5,1.5,640,-3.2,3.2);
     hTrackEtaPhiPtPrimOnly  = new TH3F("hTrackEtaPhiPtPrimOnly","hTrackEtaPhiPtP",450,0,15,160,-1.3,1.3,100,-3.2,3.2);
@@ -1299,7 +1299,7 @@ Int_t StMyAnalysisMaker::Make() {
     #ifdef FULLTREE
     if (FillTree()){
         upsTree->Fill();
-        cout << "Tree was filled -- FillTree() returned true" << endl;
+        //cout << "Tree was filled -- FillTree() returned true" << endl;
         hFillTree->Fill(7);
     }
     #endif
