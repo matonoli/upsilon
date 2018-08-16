@@ -118,7 +118,15 @@ private:
     TH1F* hEventTriggerTracks;
     TH2F* hEventNPrimaries;
     TH2F* hEventNPrimariesCent;
+
     TH3F* hEventVzvsNPrim;
+
+    //more HFT checks
+    TH3F* hEventVzvsNPrimDCA;
+    TH3F* hEventVzvsNPrimETA;
+    TH3F* hEventVzvsNPrimHardDCA;
+    TH3F* hEventVzvsNPrimHardETA;
+
     TH3F* hEventVzvsNPrimHard;
     TH1F* hEta;
 

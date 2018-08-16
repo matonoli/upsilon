@@ -251,6 +251,13 @@ void StMyAnalysisMaker::DeclareHistograms() {
 
     hEventVzvsNPrim         = new TH3F("hEventVzvsNPrim","",400,-50,50,2000,0,2000,10,0,10);
     hEventVzvsNPrimHard     = new TH3F("hEventVzvsNPrimHard","",400,-50,50,2000,0,200,10,0,10);
+
+    hEventVzvsNPrimDCA      = new TH3F("hEventVzvsNPrimDCA","",400,-50,50,2000,0,2000,10,0,10);
+    hEventVzvsNPrimETA      = new TH3F("hEventVzvsNPrimETA","",400,-50,50,2000,0,2000,10,0,10);
+    hEventVzvsNPrimHardDCA  = new TH3F("hEventVzvsNPrimHardDCA","",400,-50,50,2000,0,2000,10,0,10);
+    hEventVzvsNPrimHardETA  = new TH3F("hEventVzvsNPrimHardETA","",400,-50,50,2000,0,2000,10,0,10);
+
+
     hEta                    = new TH1F("hEta","",300,-3,3);
 
     hCorrgrefMult           = new TH2F("hCorrgrefMult","", 400,0,800,400,0,800);
@@ -424,7 +431,15 @@ void StMyAnalysisMaker::WriteHistograms() {
     hEventTriggerTracks->Write();
     hEventNPrimaries->Write();
     hEventNPrimariesCent->Write();
+
     hEventVzvsNPrim->Write();
+
+    //more HFT checks
+    hEventVzvsNPrimDCA->Write();
+    hEventVzvsNPrimETA->Write();
+    hEventVzvsNPrimHardDCA->Write();
+    hEventVzvsNPrimHardETA->Write();
+
     hEventVzvsNPrimHard->Write();
     hEta->Write();
 
@@ -1563,6 +1578,11 @@ Int_t StMyAnalysisMaker::Make() {
     int nPrim = 0;
     int nPrimHard = 0;
 
+    int nPrimDCA = 0;
+    int nPrimHardDCA = 0;
+    int nPrimETA = 0;
+    int nPrimHardETA = 0;
+
     for (int i = 0; i < nTracks; i++)
     {
         hTracksSelection->Fill(0);
@@ -1574,6 +1594,10 @@ Int_t StMyAnalysisMaker::Make() {
         if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<2.0 && t->nSigmaElectron()>0) nPrimHard++;
         if (t->pMom().mag() > 0) hEta->Fill(t->pMom().pseudoRapidity());
 
+        if (t->pMom().mag() > 0 && fabs(t->pMom().pseudoRapidity())<2.0 && t->nSigmaElectron()>0 && t->helix(mEvent->bField()).distance(primVpos)<1.5) nPrimDCA++;
+        if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<2.0 && t->nSigmaElectron()>0 && t->helix(mEvent->bField()).distance(primVpos)<1.5) nPrimHardDCA++;
+        if (t->pMom().mag() > 0 && fabs(t->pMom().pseudoRapidity())<0.2 && t->nSigmaElectron()>0) nPrimETA++;
+        if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<0.2 && t->nSigmaElectron()>0) nPrimHardETA++;
 
         #ifndef EMCEFF
         #ifndef VERS_P17
@@ -1772,6 +1796,12 @@ Int_t StMyAnalysisMaker::Make() {
 
     hEventVzvsNPrim->Fill(mEvent->primaryVertex().z(), nPrim, cent9);
     hEventVzvsNPrimHard->Fill(mEvent->primaryVertex().z(), nPrimHard, cent9);
+
+    hEventVzvsNPrimDCA->Fill(mEvent->primaryVertex().z(), nPrimDCA, cent9);
+    hEventVzvsNPrimHardDCA->Fill(mEvent->primaryVertex().z(), nPrimHardDCA, cent9);
+    hEventVzvsNPrimETA->Fill(mEvent->primaryVertex().z(), nPrimETA, cent9);
+    hEventVzvsNPrimHardETA->Fill(mEvent->primaryVertex().z(), nPrimHardETA, cent9);
+    
     //-------------------------------------------------------
 
 
