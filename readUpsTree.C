@@ -117,28 +117,28 @@ void readUpsTree(const Char_t *inputFile="test.root", Int_t cutSet = 0) {
     TH1F* hUpsPt 	             	= new TH1F("hUpsPt","",200,0,20);
     hUpsPt->Sumw2();
 
-    int ncuts = 6;
+    int ncuts = 7;
     if (cutSet+1>ncuts)	{
     	cout << "Invalid set of cuts was chosen! Setting to default." << endl;
     	cutSet = 0;	}
 
-    const float cutVzTpc[] 		= {30., 	30.,	30.,	30.,	30.,	30.};	//vertex
-    const float cutVzDif[] 		= {4., 		4., 	4.,		4.,		4.,		4.};
+    const float cutVzTpc[] 		= {30., 	30.,	30.,	30.,	30.,	30.,	30.};	//vertex
+    const float cutVzDif[] 		= {4., 		4., 	4.,		4.,		4.,		4.,		4.};
 
-    const int cutNHits[] 		= {20, 		30, 	25,		20,		20,		20};	//nhits
-    const float cutNRat[] 		= {0.52, 	0.52, 	0.52,	0.52,	0.52,	0.52};
-    const int cutNDedx[] 		= {10, 		10, 	10,		10,		10,		10};
-    const float cutNsigL[] 		= {-1.5,	-1.5,	-1.5,	-1.5,	-1.5,	-1.5};
-    const float cutNsigT[] 		= {3.0, 	3.0, 	3.0,	3.0,	3.0,	3.0};
-    const float cutEta[] 		= {1.0, 	1.0, 	1.0,	1.0,	1.0,	1.0};
-    const float cutEpL[] 		= {0.75, 	0.75, 	0.3,	0.3,	0.75,	0.75};
-    const float cutEpT[] 		= {1.5, 	1.5, 	1.8,	1.8,	1.5,	1.5};
-    const float cutR[] 			= {0.025, 	0.025, 	0.025,	0.03,	0.025,	0.025};
-    const float cutPlow[] 		= {3.25, 	3.5, 	3.5,	3.0,	3.5,	3.5};
-    const float cutDca[] 		= {0.75, 	0.75, 	1.5,	1.5,	0.75,	0.75};
-    const float cutPlead[] 		= {4.5, 	4.5, 	4.5,	4.5,	4.5,	4.5};
-    const float cutPairY[] 		= {1.0, 	1.0, 	1.0,	1.0,	1.0,	0.5};
-    const float cutPairPt[] 	= {10.0, 	10.0, 	10.0,	10.0,	10.0,	10.0};
+    const int cutNHits[] 		= {20, 		30, 	25,		20,		20,		20,		20};	//nhits
+    const float cutNRat[] 		= {0.52, 	0.52, 	0.52,	0.52,	0.52,	0.52,	0.52};
+    const int cutNDedx[] 		= {10, 		10, 	10,		10,		10,		10,		10};
+    const float cutNsigL[] 		= {-1.5,	-1.5,	-1.5,	-1.5,	-1.5,	-1.5,	-1.65};
+    const float cutNsigT[] 		= {3.0, 	3.0, 	3.0,	3.0,	3.0,	3.0,	3.0};
+    const float cutEta[] 		= {1.0, 	1.0, 	1.0,	1.0,	1.0,	1.0,	1.0};
+    const float cutEpL[] 		= {0.75, 	0.75, 	0.3,	0.3,	0.75,	0.75,	0.65};
+    const float cutEpT[] 		= {1.5, 	1.5, 	1.8,	1.8,	1.5,	1.5,	1.8};
+    const float cutR[] 			= {0.025, 	0.025, 	0.025,	0.03,	0.025,	0.025,	0.026};
+    const float cutPlow[] 		= {3.25, 	3.5, 	3.5,	3.0,	3.5,	3.5,	3.5};
+    const float cutDca[] 		= {0.75, 	0.75, 	1.5,	1.5,	0.75,	0.75,	3.0};
+    const float cutPlead[] 		= {4.5, 	4.5, 	4.5,	4.5,	4.5,	4.5,	4.5};
+    const float cutPairY[] 		= {1.0, 	1.0, 	1.0,	1.0,	1.0,	0.5,	1.0};
+    const float cutPairPt[] 	= {10.0, 	10.0, 	10.0,	10.0,	10.0,	10.0,	10.};
 
     // make rbg histo
     TString bbcuts = Form("eleGlDca<%f&&posGlDca<%f&&",cutDca[cutSet],cutDca[cutSet]);
