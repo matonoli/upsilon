@@ -1630,7 +1630,7 @@ Int_t StMyAnalysisMaker::Make() {
 
         // TRACK HISTOGRAMS
         //Float_t dca = (t->dcaGeometry().helix().origin() - primVpos ).mag();
-        Float_t dca = t->helix().distance(primVpos);
+        Float_t dca = t->helix(mEvent->bField()).distance(primVpos);
         hTrackdEdxvsp->Fill(t->pMom().mag(),t->dEdx());
         hTracknSigmaElectronvsp->Fill(t->pMom().mag(),t->nSigmaElectron());
         hTracknSigmaPionvsp->Fill(t->pMom().mag(),t->nSigmaPion());
