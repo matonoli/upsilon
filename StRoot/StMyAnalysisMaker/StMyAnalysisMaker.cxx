@@ -1617,7 +1617,6 @@ Int_t StMyAnalysisMaker::Make() {
             nPrimQA++;
             if(t->helix(mEvent->bField()).distance(primVpos)<0.75) nPrimQA_DCA++;
             if(fabs(t->pMom().pseudoRapidity()<0.2)) nPrimQA_ETA++;
-            if()
         }
 
         #ifndef EMCEFF
