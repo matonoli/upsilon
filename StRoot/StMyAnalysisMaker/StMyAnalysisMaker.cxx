@@ -256,7 +256,9 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hEventVzvsNPrimETA      = new TH3F("hEventVzvsNPrimETA","",400,-50,50,2000,0,2000,10,0,10);
     hEventVzvsNPrimHardDCA  = new TH3F("hEventVzvsNPrimHardDCA","",400,-50,50,2000,0,2000,10,0,10);
     hEventVzvsNPrimHardETA  = new TH3F("hEventVzvsNPrimHardETA","",400,-50,50,2000,0,2000,10,0,10);
-
+    hEventVzvsNPrimQA       = new TH3F("hEventVzvsNPrimQA","",400,-50,50,2000,0,2000,10,0,10);
+    hEventVzvsNPrimQA_DCA   = new TH3F("hEventVzvsNPrimQA_DCA","",400,-50,50,2000,0,2000,10,0,10);
+    hEventVzvsNPrimQA_ETA   = new TH3F("hEventVzvsNPrimQA_ETA","",400,-50,50,2000,0,2000,10,0,10);
 
     hEta                    = new TH1F("hEta","",300,-3,3);
 
@@ -309,6 +311,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hElectronP              = new TH1F("hElectronP","",150,0,15);
     hElectronzDistphiDist   = new TH2F("hElectronzDistphiDist","",200,-10,10,200,-0.1,0.1);
     hElectronDca            = new TH1F("hElectronDca","hElectronDca",100,0,10);
+    hElectronDcaWoDcaCut    = new TH1F("hElectronDcaWoDcaCut","hElectronDcaWoDcaCut",100,0,10);
     hElectronDistvE0E       = new TH2F("hElectronDistvE0E","",200,0,20,150,0,1.5);
 
     hElectronEtaPhiD        = new TH2F("hElectronEtaPhiD","",200,-0.1,0.1,200,-0.1,0.1);
@@ -439,6 +442,9 @@ void StMyAnalysisMaker::WriteHistograms() {
     hEventVzvsNPrimETA->Write();
     hEventVzvsNPrimHardDCA->Write();
     hEventVzvsNPrimHardETA->Write();
+    hEventVzvsNPrimQA->Write();
+    hEventVzvsNPrimQA_DCA->Write();
+    hEventVzvsNPrimQA_ETA->Write();
 
     hEventVzvsNPrimHard->Write();
     hEta->Write();
@@ -492,6 +498,7 @@ void StMyAnalysisMaker::WriteHistograms() {
     hElectronPt->Write();
     hElectronP->Write();
     hElectronzDistphiDist->Write();
+    hElectronDcaWoDcaCut->Write();
     hElectronDca->Write();
     hElectronDistvE0E->Write();
 
@@ -1583,6 +1590,10 @@ Int_t StMyAnalysisMaker::Make() {
     int nPrimETA = 0;
     int nPrimHardETA = 0;
 
+    int nPrimQA = 0;
+    int nPrimQA_DCA = 0;
+    int nPrimQA_ETA = 0;
+
     for (int i = 0; i < nTracks; i++)
     {
         hTracksSelection->Fill(0);
@@ -1598,6 +1609,16 @@ Int_t StMyAnalysisMaker::Make() {
         if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<2.0 && t->nSigmaElectron()>0 && t->helix(mEvent->bField()).distance(primVpos)<1.5) nPrimHardDCA++;
         if (t->pMom().mag() > 0 && fabs(t->pMom().pseudoRapidity())<0.2 && t->nSigmaElectron()>0) nPrimETA++;
         if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<0.2 && t->nSigmaElectron()>0) nPrimHardETA++;
+
+
+        //NPrim with basic QA cuts
+        if(t->nHitsFit() > 20 && (float)t->nHitsFit()/t->nHitsMax() > 0.52 && t->nHitsDedx() > 10 && t->pMom().mag() != 0)
+        {
+            nPrimQA++;
+            if(t->helix(mEvent->bField()).distance(primVpos)<0.75) nPrimQA_DCA++;
+            if(fabs(t->pMom().pseudoRapidity()<0.2)) nPrimQA_ETA++;
+            if()
+        }
 
         #ifndef EMCEFF
         #ifndef VERS_P17
@@ -1639,7 +1660,7 @@ Int_t StMyAnalysisMaker::Make() {
         if(t->pMom().mag()>0){
         hTrackEtaPhiPtPrimOnly->Fill(t->pMom().perp(),t->pMom().pseudoRapidity(),t->pMom().phi());
         }
-        hTrackDca->Fill(dca);
+        hTrackDca->Fill(dca); // DCA hist for all tracks without any cuts
         hTracknHitsRatio->Fill((float)t->nHitsFit()/t->nHitsMax());
         hTracknHitsFit->Fill(t->nHitsFit());
 
@@ -1700,6 +1721,7 @@ Int_t StMyAnalysisMaker::Make() {
         //Float_t dca4 = (trHelix.origin() - primVpos ).mag(); 
         //cout << "dca is " << dca << " vs " << dca2 << " vs " << dca3 << " vs " << dca4 << endl;
 
+        hElectronDcaWoDcaCut->Fill(dca3); //DCA hist for selected tracks (electrons) without DCA cut
         if (dca3 > 1.5) continue;
         #endif
     	hTracksSelection->Fill(15);
@@ -1709,7 +1731,7 @@ Int_t StMyAnalysisMaker::Make() {
         hElectronPt->Fill(t->pMom().perp());
         hElectronP->Fill(t->pMom().mag());
         hElectronzDistphiDist->Fill(pidZdist,pidPhidist);
-        hElectronDca->Fill(dca3);
+        hElectronDca->Fill(dca3); // DCA hist for electron tracks including DCA cut
         if (pidE != 0) hElectronDistvE0E->Fill(pidZdist*pidZdist+10000*pidPhidist*pidPhidist,pidE0/pidE);
         if (getBEMC) {
             hElectronEtaPhiD->Fill(etaphi[0],etaphi[1]);
@@ -1802,6 +1824,9 @@ Int_t StMyAnalysisMaker::Make() {
     hEventVzvsNPrimHardDCA->Fill(mEvent->primaryVertex().z(), nPrimHardDCA, cent9);
     hEventVzvsNPrimETA->Fill(mEvent->primaryVertex().z(), nPrimETA, cent9);
     hEventVzvsNPrimHardETA->Fill(mEvent->primaryVertex().z(), nPrimHardETA, cent9);
+    hEventVzvsNPrimQA->Fill(mEvent->primaryVertex().z(),nPrimQA,cent9);
+    hEventVzvsNPrimQA_DCA->Fill(mEvent->primaryVertex().z(),nPrimQA_DCA,cent9);
+    hEventVzvsNPrimQA_ETA->Fill(mEvent->primaryVertex().z(),nPrimQA_ETA,cent9);
     
     //-------------------------------------------------------
 

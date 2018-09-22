@@ -126,6 +126,9 @@ private:
     TH3F* hEventVzvsNPrimETA;
     TH3F* hEventVzvsNPrimHardDCA;
     TH3F* hEventVzvsNPrimHardETA;
+    TH3F* hEventVzvsNPrimQA;
+    TH3F* hEventVzvsNPrimQA_DCA;
+    TH3F* hEventVzvsNPrimQA_ETA;
 
     TH3F* hEventVzvsNPrimHard;
     TH1F* hEta;
@@ -179,6 +182,7 @@ private:
     TH1F* hElectronP;
     TH2F* hElectronzDistphiDist;
     TH1F* hElectronDca;
+    TH1F* hElectronDcaWoDcaCut;
     TH2F* hElectronDistvE0E;
     TH2F* hElectronEtaPhiD;
     TH1F* hElectronR;
