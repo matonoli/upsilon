@@ -209,6 +209,7 @@ private:
     TH2F* hTrigElectronE0vsP;
     TH2F* hTrigElectronGlEvsP;
     TH2F* hTrigElectronGlE0vsP;
+    TH3F* hTrackEtaPhiPtPQA;
     //;
 
     TH3F* hIMpp;

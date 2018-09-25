@@ -339,6 +339,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hTrigElectronE0vsP      = new TH2F("hTrigElectronE0vsP","",450,0,15,450,0,15);
     hTrigElectronGlEvsP     = new TH2F("hTrigElectronGlEvsP","",450,0,15,450,0,15);
     hTrigElectronGlE0vsP    = new TH2F("hTrigElectronGlE0vsP","",450,0,15,450,0,15);
+    hTrackEtaPhiPtPQA		= new TH3F("hTrackEtaPhiPtPQA","hTrackEtaPhiPtPQA",450,0,15,160,-1.3,1.3,100,-3.2,3.2);
     //;
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
@@ -526,6 +527,7 @@ void StMyAnalysisMaker::WriteHistograms() {
     hTrigElectronE0vsP->Write();
     hTrigElectronGlEvsP->Write();
     hTrigElectronGlE0vsP->Write();
+    hTrackEtaPhiPtPQA->Write();
 
     hIMpp->Write();
     hIMmm->Write();
@@ -1611,12 +1613,13 @@ Int_t StMyAnalysisMaker::Make() {
         if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<0.2 && t->nSigmaElectron()>0) nPrimHardETA++;
 
 
-        //NPrim with basic QA cuts
-        if(t->nHitsFit() > 20 && (float)t->nHitsFit()/t->nHitsMax() > 0.52 && t->nHitsDedx() > 10 && t->pMom().mag() != 0)
+        //NPrim with basic QA cuts - prim tracks ONLY
+        if(t->nHitsFit() > 20 && (float)t->nHitsFit()/t->nHitsMax() > 0.52 && t->nHitsDedx() > 10 && t->pMom().mag() != 0 && fabs(t->pMom().pseudoRapidity())<1)
         {
+        	hTrackEtaPhiPtPQA->Fill(t->pMom().perp(),t->pMom().pseudoRapidity(),t->pMom().phi());
             nPrimQA++;
             if(t->helix(mEvent->bField()).distance(primVpos)<0.75) nPrimQA_DCA++;
-            if(fabs(t->pMom().pseudoRapidity()<0.2)) nPrimQA_ETA++;
+            if(fabs(t->pMom().pseudoRapidity())<0.2) nPrimQA_ETA++;
         }
 
         #ifndef EMCEFF
