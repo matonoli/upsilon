@@ -1605,23 +1605,34 @@ Int_t StMyAnalysisMaker::Make() {
         if (! t) continue;
         hTracksSelection->Fill(1);
 
-        if (t->pMom().mag() > 0 && fabs(t->pMom().pseudoRapidity())<2.0 && t->nSigmaElectron()>0) nPrim++;
-        if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<2.0 && t->nSigmaElectron()>0) nPrimHard++;
+        if (t->pMom().mag() > 0 && fabs(t->pMom().pseudoRapidity())<2.0 /*&& t->nSigmaElectron()>0*/) nPrim++;
+        if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<2.0 /*&& t->nSigmaElectron()>0*/) nPrimHard++;
         if (t->pMom().mag() > 0) hEta->Fill(t->pMom().pseudoRapidity());
-
-        if (t->pMom().mag() > 0 && fabs(t->pMom().pseudoRapidity())<2.0 && t->nSigmaElectron()>0 && t->helix(mEvent->bField()).distance(primVpos)<1.5) nPrimDCA++;
-        if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<2.0 && t->nSigmaElectron()>0 && t->helix(mEvent->bField()).distance(primVpos)<1.5) nPrimHardDCA++;
-        if (t->pMom().mag() > 0 && fabs(t->pMom().pseudoRapidity())<0.2 && t->nSigmaElectron()>0) nPrimETA++;
-        if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<0.2 && t->nSigmaElectron()>0) nPrimHardETA++;
+        #ifdef VERS_P17
+        if (t->pMom().mag() > 0 && fabs(t->pMom().pseudoRapidity())<2.0 /*&& t->nSigmaElectron()>0*/ && t->helix(mEvent->bField()).distance(primVpos)<1.5) nPrimDCA++;
+        if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<2.0 /*&& t->nSigmaElectron()>0*/ && t->helix(mEvent->bField()).distance(primVpos)<1.5) nPrimHardDCA++;
+        #endif
+        #ifndef VERS_P17
+        if (t->pMom().mag() > 0 && fabs(t->pMom().pseudoRapidity())<2.0 /*&& t->nSigmaElectron()>0*/ && t->helix().distance(primVpos)<1.5) nPrimDCA++;
+        if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<2.0 /*&& t->nSigmaElectron()>0*/ && t->helix().distance(primVpos)<1.5) nPrimHardDCA++;
+        #endif
+        if (t->pMom().mag() > 0 && fabs(t->pMom().pseudoRapidity())<0.2 /*&& t->nSigmaElectron()>0*/) nPrimETA++;
+        if (t->pMom().mag() > 3.5 && fabs(t->pMom().pseudoRapidity())<0.2 /*&& t->nSigmaElectron()>0*/) nPrimHardETA++;
 
 
         //NPrim with basic QA cuts - prim tracks ONLY
         if(t->nHitsFit() > 20 && (float)t->nHitsFit()/t->nHitsMax() > 0.52 && t->nHitsDedx() > 10 && t->pMom().mag() != 0 && fabs(t->pMom().pseudoRapidity())<1)
         {
         	hTrackEtaPhiPtPQA->Fill(t->pMom().perp(),t->pMom().pseudoRapidity(),t->pMom().phi());
+            #ifdef VERS_P17
         	hTrackDca_QA->Fill(t->helix(mEvent->bField()).distance(primVpos));
-            nPrimQA++;
             if(t->helix(mEvent->bField()).distance(primVpos)<0.75) nPrimQA_DCA++;
+            #endif
+            #ifndef VERS_P17
+            hTrackDca_QA->Fill(t->helix().distance(primVpos));
+            if(t->helix().distance(primVpos)<0.75) nPrimQA_DCA++;
+            #endif
+            nPrimQA++;            
             if(fabs(t->pMom().pseudoRapidity())<0.2) nPrimQA_ETA++;
         }
 
@@ -1656,7 +1667,12 @@ Int_t StMyAnalysisMaker::Make() {
 
         // TRACK HISTOGRAMS
         //Float_t dca = (t->dcaGeometry().helix().origin() - primVpos ).mag();
+        #ifdef VERS_P17
         Float_t dca = t->helix(mEvent->bField()).distance(primVpos);
+        #endif
+        #ifndef VERS_P17
+        Float_t dca = t->helix().distance(primVpos);
+        #endif
         hTrackdEdxvsp->Fill(t->pMom().mag(),t->dEdx());
         hTracknSigmaElectronvsp->Fill(t->pMom().mag(),t->nSigmaElectron());
         hTracknSigmaPionvsp->Fill(t->pMom().mag(),t->nSigmaPion());
