@@ -340,7 +340,7 @@ void StMyAnalysisMaker::DeclareHistograms() {
     hTrigElectronGlEvsP     = new TH2F("hTrigElectronGlEvsP","",450,0,15,450,0,15);
     hTrigElectronGlE0vsP    = new TH2F("hTrigElectronGlE0vsP","",450,0,15,450,0,15);
     hTrackEtaPhiPtPQA		= new TH3F("hTrackEtaPhiPtPQA","hTrackEtaPhiPtPQA",450,0,15,160,-1.3,1.3,100,-3.2,3.2);
-    hTrackDca_QA			= new TH1F("hTrackDca","hTrackDca",100,0,20);
+    hTrackDca_QA			= new TH1F("hTrackDca_QA","hTrackDca_QA",100,0,20);
     //;
 
     hIMpp           		= new TH3F("hIMpp","",200,0,20,10,1,21,11,-1.5,9.5);
