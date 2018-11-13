@@ -1523,7 +1523,7 @@ Int_t StMyAnalysisMaker::Make() {
         hEmcE->Fill(pidE);
         if (pidE != 0) hEmcE0vE->Fill(pidE0/pidE);
         hEmczDistphiDist->Fill(pidZdist,pidPhidist);
-        hEmcTrackIndex->Fill(emctraits->trackIndex());  // how many clusters dont have associated tracks ?
+        //hEmcTrackIndex->Fill(emctraits->trackIndex());  // how many clusters dont have associated tracks ?
     }
     //-------------------------------------------------------
 
